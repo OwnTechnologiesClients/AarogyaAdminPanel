@@ -12,6 +12,7 @@ import {
   ChevronUp,
   Filter
 } from "lucide-react"
+import Link from "next/link"
 
 // Sample doctor data matching the reference image
 const doctorsData = [
@@ -176,9 +177,11 @@ export default function DoctorsList() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Doctors List</h1>
             <p className="text-gray-700 text-lg">View and manage all doctors</p>
           </div>
-          <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-sm">
-            Add New Doctor
-          </button>
+          <Link href="/doctors/add">
+            <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-sm">
+              Add New Doctor
+            </button>
+          </Link>
         </div>
 
         <div className="bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-lg border border-blue-100">

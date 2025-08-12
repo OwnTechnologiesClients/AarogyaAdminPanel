@@ -109,7 +109,7 @@ const {
 
 See the following pages for complete examples:
 - `app/doctors/list/page.js` - Doctors list with pagination
-- `app/patients/list/page.js` - Patients list with pagination
+- `app/treatment/list/page.js` - Treatments list with pagination
 
 ### Customization
 

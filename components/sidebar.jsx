@@ -27,23 +27,18 @@ const menuItems = [
     icon: Stethoscope,
     href: "/doctors",
     subItems: [
-      { title: "Doctors Dashboard", href: "/doctors" },
       { title: "Doctors List", href: "/doctors/list" },
-      { title: "Doctors Card", href: "/doctors/card" },
-      { title: "Doctor Profile", href: "/doctors/profile" },
       { title: "Add Doctor", href: "/doctors/add" },
       { title: "Edit Doctor", href: "/doctors/edit" },
     ]
   },
   {
-    title: "Patients Dashboard",
+    title: "Treatment Dashboard",
     icon: Users,
-    href: "/patients",
+    href: "/treatment",
     subItems: [
-      { title: "Patients Dashboard", href: "/patients" },
-      { title: "Patients List", href: "/patients/list" },
-      { title: "Add Patient", href: "/patients/add" },
-      { title: "Edit Patient Details", href: "/patients/edit" },
+      { title: "Treatments List", href: "/treatment" },
+      { title: "Add Treatment", href: "/treatment/add" },
     ]
   },
   {
@@ -51,40 +46,28 @@ const menuItems = [
     icon: Building2,
     href: "/hospital",
     subItems: [
-      { title: "Hospital Dashboard", href: "/hospital" },
-      { title: "Doctors", href: "/hospital/doctors" },
-      { title: "Employees", href: "/hospital/employees" },
-      { title: "Attendance", href: "/hospital/attendance" },
-      { title: "Leaves", href: "/hospital/leaves" },
-      { title: "Salary", href: "/hospital/salary" },
-      { title: "Department", href: "/hospital/departments" },
-      { title: "Services", href: "/hospital/services" },
-      { title: "Role Access", href: "/hospital/role-access" },
-      { title: "Holidays", href: "/hospital/holidays" },
-      { title: "My Activities", href: "/hospital/my-activities" },
+      { title: "Hospital List", href: "/hospital" },
+      { title: "Add Hospital", href: "/hospital/add" },
     ]
   },
-  {
-    title: "Appointments",
-    icon: Calendar,
-    href: "/appointments",
-    subItems: [
-      { title: "Appointments", href: "/appointments" },
-      { title: "Appointment List", href: "/appointments/list" },
-      { title: "Book Appointment", href: "/appointments/book" },
-      { title: "Edit Appointment", href: "/appointments/edit" },
-    ]
-  },
+ 
   {
     title: "Chat",
     icon: MessageCircle,
     href: "/chat",
   },
   {
-    title: "Notification",
-    icon: Bell,
-    href: "/notifications",
+    title: "Enquiry",
+    icon: MessageCircle,
+    href: "/enquiry",
   },
+  {
+    title: "Users",
+    icon: Users,
+    href: "/users",
+  
+  },
+
   {
     title: "Logout",
     icon: LogOut,
@@ -186,8 +169,7 @@ export function Sidebar({ isOpen, onToggle }) {
       {/* Mobile Overlay */}
       {isMobile && isOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={onToggle}
+          className="fixed inset-0 bg-black bg-opacity-10 z-20 lg:hidden pointer-events-none"
           aria-hidden="true"
         />
       )}
@@ -196,12 +178,21 @@ export function Sidebar({ isOpen, onToggle }) {
       <aside 
         ref={sidebarRef}
         className={cn(
-          "fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 h-screen flex flex-col transform transition-transform duration-300 ease-in-out",
+          "fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 h-screen flex flex-col transform transition-transform duration-300 ease-in-out shadow-xl",
           isMobile && !isOpen && "-translate-x-full",
-          "lg:translate-x-0"
+          "lg:translate-x-0 lg:shadow-none"
         )}
         role="navigation"
         aria-label="Main navigation"
+        style={{
+          WebkitOverflowScrolling: 'touch'
+        }}
+        onClick={(e) => {
+          // Close sidebar when clicking on the sidebar background (not on menu items)
+          if (isMobile && e.target === e.currentTarget) {
+            onToggle()
+          }
+        }}
       >
         {/* Header with Mobile Toggle */}
         <div className="flex items-center justify-between py-6 px-4 border-b border-gray-200">

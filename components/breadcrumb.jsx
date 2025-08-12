@@ -6,24 +6,17 @@ import { ChevronRight, Home } from "lucide-react"
 
 const pathMap = {
   "/": "Home",
-  "/doctors": "Doctors Dashboard",
+  "/doctors": "Doctors",
   "/doctors/list": "Doctors List",
-  "/doctors/card": "Doctors Card",
-  "/doctors/profile": "Doctor Profile",
   "/doctors/add": "Add Doctor",
   "/doctors/edit": "Edit Doctor",
-  "/patients": "Patients Dashboard",
-  "/patients/list": "Patients List",
-  "/patients/profile": "Patient Profile",
-  "/patients/add": "Add Patient",
-  "/hospital": "Hospital Dashboard",
-  "/hospital/departments": "Departments",
-  "/hospital/staff": "Staff",
-  "/appointments": "All Appointments",
-  "/appointments/schedule": "Schedule",
-  "/appointments/calendar": "Calendar",
+  "/treatment": "Treatment Dashboard",
+  "/treatment/add": "Add Treatment",
+  "/hospital": "Hospital List",
+  "/hospital/add": "Add Hospital",
   "/chat": "Chat",
-  "/notifications": "Notification",
+  "/enquiry": "Enquiry Management",
+  "/users": "Signup Users",
 }
 
 export function Breadcrumb() {

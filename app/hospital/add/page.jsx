@@ -3,26 +3,25 @@
 import { useState } from 'react'
 import { Layout } from "@/components/layout"
 import { Briefcase, User } from "lucide-react"
-import PersonalDetails from './personal-details'
+import HospitalDetails from './hospital-details'
 import ProfileBio from './profile-bio'
 
-
-export default function AddDoctor() {
-  const [activeTab, setActiveTab] = useState('personal-details')
+export default function AddHospital() {
+  const [activeTab, setActiveTab] = useState('hospital-details')
 
   const tabs = [
-    { id: 'personal-details', label: 'Personal Details', icon: Briefcase },
+    { id: 'hospital-details', label: 'Hospital Details', icon: Briefcase },
     { id: 'profile-bio', label: 'Profile & Bio', icon: User },
   ]
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'personal-details':
-        return <PersonalDetails />
+      case 'hospital-details':
+        return <HospitalDetails />
       case 'profile-bio':
         return <ProfileBio />
       default:
-        return <PersonalDetails />
+        return <HospitalDetails />
     }
   }
 

@@ -2,11 +2,10 @@
 
 import { useState } from 'react'
 import { Layout } from "@/components/layout"
-import { Briefcase, User, Calendar, FileText } from "lucide-react"
+import { Briefcase, User,} from "lucide-react"
 import PersonalDetails from './personal-details'
 import ProfileBio from './profile-bio'
-import Availability from './availability'
-import AccountDetails from './account-details'
+
 
 export default function EditDoctor() {
   const [activeTab, setActiveTab] = useState('personal-details')
@@ -14,8 +13,7 @@ export default function EditDoctor() {
   const tabs = [
     { id: 'personal-details', label: 'Personal Details', icon: Briefcase },
     { id: 'profile-bio', label: 'Profile & Bio', icon: User },
-    { id: 'availability', label: 'Availability', icon: Calendar },
-    { id: 'account-details', label: 'Account Details', icon: FileText }
+
   ]
 
   const renderTabContent = () => {
@@ -24,10 +22,7 @@ export default function EditDoctor() {
         return <PersonalDetails />
       case 'profile-bio':
         return <ProfileBio />
-      case 'availability':
-        return <Availability />
-      case 'account-details':
-        return <AccountDetails />
+ 
       default:
         return <PersonalDetails />
     }

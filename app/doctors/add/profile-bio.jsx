@@ -42,6 +42,33 @@ const ProfileBio = () => {
         />
       </div>
 
+      <div className="space-y-4">
+        <label className="block text-lg font-semibold text-gray-900">Specialization</label>
+        <input 
+          type="text" 
+          placeholder="Cardio, Neurology, etc." 
+          className="w-full px-4 py-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-gray-900 placeholder-gray-500 text-base"
+        />
+      </div>
+
+      <div className="space-y-4">
+        <label className="block text-lg font-semibold text-gray-900">Educational Info</label>
+        <input 
+          type="text" 
+          placeholder="MBBS, MD, etc." 
+          className="w-full px-4 py-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-gray-900 placeholder-gray-500 text-base"
+        />
+      </div>
+
+      <div className="space-y-4">
+        <label className="block text-lg font-semibold text-gray-900">Research, Publications and Awards</label>
+        <input 
+          type="text" 
+          placeholder="Research, Publications, Awards" 
+          className="w-full px-4 py-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-gray-900 placeholder-gray-500 text-base"
+        />
+      </div>
+
       <div className="flex justify-end space-x-4 pt-8 border-t border-gray-200">
         <button 
           type="button" 
