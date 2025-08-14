@@ -29,7 +29,7 @@ const menuItems = [
     subItems: [
       { title: "Doctors List", href: "/doctors/list" },
       { title: "Add Doctor", href: "/doctors/add" },
-      { title: "Edit Doctor", href: "/doctors/edit" },
+  
     ]
   },
   {

@@ -14,128 +14,121 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 
-// Sample doctor data matching the reference image
+// Sample doctor data matching the Excel sheet fields
 const doctorsData = [
   {
-    id: "#0047",
-    name: "Taylor Melon",
-    specialization: "Therapist",
-    contactNumber: "(203) 869-0576",
-    availability: "Sunday to Friday: 10:00am - 02:00pm",
-    location: "Downtown Medical Center",
-    experience: "10 years",
-    avatar: "/doctorimg/doctor-1.png"
+    id: 1,
+    doctorName: "Dr. Steven Nissen",
+    specialty: "Interventional Cardiologist",
+    location: "Mumbai, India",
+    image: "img1.png",
+    experience: "30+ years",
+    rating: 9.9,
+    patientsTreated: "50+",
+    introduction: "Specializes in catheter-based treatment of structural heart diseases and coronary artery disease. Expert in minimally invasive cardiac procedures.",
+    specializations: "Interventional Cardiology, Clinical Trials, Preventive Cardiology, Coronary Artery Disease, Structural Heart Disease",
+    education: "Harvard Medical School (Medical Degree)",
+    professionalExperience: "Senior Consultant - Cleveland Clinic (30+ years), Attending Physician - Medical Center (5+ years), Chief Resident - Teaching Hospital (2 years)",
+    languages: "English, Spanish",
+    treatmentsProcedures: "Minimally Invasive Heart Procedures, Coronary Stenting, Valve Repair",
+    awards: "Distinguished Scientist Award, Top Cardiologist 2023",
+    about: "Leading interventional cardiologist with experience in clinical trials and preventive cardiology",
+    workExperience: "Senior Cardiologist - Cleveland Clinic (2010-Present), Interventional Cardiologist - Mount Sinai (2008-2010)"
   },
   {
-    id: "#0044",
-    name: "Ronald Sullivan",
-    specialization: "Radiologist",
-    contactNumber: "(808) 947-1332",
-    availability: "Sunday to Friday: 03:00pm - 09:00pm",
-    location: "River Valley Hospital",
-    experience: "30 years",
-    avatar: "/doctorimg/doctor-2.png"
+    id: 2,
+    doctorName: "Dr. Sarah Johnson",
+    specialty: "Neurologist",
+    location: "Delhi, India",
+    image: "img2.png",
+    experience: "15+ years",
+    rating: 9.7,
+    patientsTreated: "200+",
+    introduction: "Expert in neurological disorders and brain mapping techniques. Specializes in stroke treatment and epilepsy management.",
+    specializations: "Neurology, Stroke Treatment, Epilepsy, Brain Mapping, Neuroimaging",
+    education: "AIIMS Delhi (Medical Degree), Johns Hopkins (Neurology Residency)",
+    professionalExperience: "Senior Neurologist - AIIMS Delhi (10+ years), Consultant - Apollo Hospital (5+ years)",
+    languages: "English, Hindi",
+    treatmentsProcedures: "Stroke Treatment, Epilepsy Management, Brain Surgery, Neurological Rehabilitation",
+    awards: "Best Neurologist Award 2022, Excellence in Stroke Care",
+    about: "Renowned neurologist with expertise in complex neurological cases and innovative treatment approaches",
+    workExperience: "Senior Neurologist - AIIMS Delhi (2015-Present), Consultant - Apollo Hospital (2010-2015)"
   },
   {
-    id: "#0044",
-    name: "George Bailey",
-    specialization: "Pediatrics",
-    contactNumber: "(269) 657-8949",
-    availability: "Sunday to Friday: 05:00pm - 08:00pm",
-    location: "Skin & Aesthetics Clinic",
-    experience: "15 years",
-    avatar: "/doctorimg/doctor-3.png"
+    id: 3,
+    doctorName: "Dr. Michael Chen",
+    specialty: "Oncologist",
+    location: "Bangalore, India",
+    image: "img3.png",
+    experience: "20+ years",
+    rating: 9.8,
+    patientsTreated: "300+",
+    introduction: "Specializes in cancer treatment and research. Expert in chemotherapy, radiation therapy, and targeted therapy.",
+    specializations: "Oncology, Cancer Research, Chemotherapy, Radiation Therapy, Targeted Therapy",
+    education: "Manipal University (Medical Degree), MD Anderson Cancer Center (Oncology Fellowship)",
+    professionalExperience: "Senior Oncologist - Manipal Hospital (15+ years), Research Fellow - MD Anderson (5+ years)",
+    languages: "English, Kannada, Mandarin",
+    treatmentsProcedures: "Chemotherapy, Radiation Therapy, Immunotherapy, Cancer Surgery, Palliative Care",
+    awards: "Oncology Excellence Award 2023, Research Innovation Award",
+    about: "Leading oncologist with extensive experience in cancer treatment and research",
+    workExperience: "Senior Oncologist - Manipal Hospital (2010-Present), Research Fellow - MD Anderson (2005-2010)"
   },
   {
-    id: "#0067",
-    name: "Bshton Cozei",
-    specialization: "Oncologist",
-    contactNumber: "(704) 896-7895",
-    availability: "Sunday to Friday: 09:00am - 02:00pm",
-    location: "West Side Pediatric Clinic",
-    experience: "08 years",
-    avatar: "/doctorimg/doctor-4.png"
+    id: 4,
+    doctorName: "Dr. Emily Rodriguez",
+    specialty: "Gynecologist",
+    location: "Pune, India",
+    image: "img4.png",
+    experience: "18+ years",
+    rating: 9.6,
+    patientsTreated: "150+",
+    introduction: "Expert in women's health and gynecological procedures. Specializes in high-risk pregnancies and fertility treatments.",
+    specializations: "Gynecology, Obstetrics, High-Risk Pregnancy, Fertility Treatment, Women's Health",
+    education: "B.J. Medical College (Medical Degree), Fellowship in Reproductive Medicine",
+    professionalExperience: "Senior Gynecologist - Ruby Hall Clinic (12+ years), Consultant - Sahyadri Hospital (6+ years)",
+    languages: "English, Marathi, Spanish",
+    treatmentsProcedures: "Gynecological Surgery, Fertility Treatment, High-Risk Pregnancy Care, Women's Health Screening",
+    awards: "Best Gynecologist Award 2022, Excellence in Women's Health",
+    about: "Experienced gynecologist dedicated to providing comprehensive women's healthcare",
+    workExperience: "Senior Gynecologist - Ruby Hall Clinic (2012-Present), Consultant - Sahyadri Hospital (2006-2012)"
   },
   {
-    id: "#0047",
-    name: "Allan Stuart",
-    specialization: "Neurologist",
-    contactNumber: "(718) 875-3677",
-    availability: "Sunday to Friday: 03:00pm - 05:00pm",
-    location: "East Side Family Center",
-    experience: "19 years",
-    avatar: "/doctorimg/doctor-5.png"
+    id: 5,
+    doctorName: "Dr. David Kim",
+    specialty: "Orthopedic Surgeon",
+    location: "Chennai, India",
+    image: "img5.png",
+    experience: "25+ years",
+    rating: 9.9,
+    patientsTreated: "400+",
+    introduction: "Expert in joint replacement and sports medicine. Specializes in minimally invasive orthopedic procedures.",
+    specializations: "Orthopedic Surgery, Joint Replacement, Sports Medicine, Trauma Surgery, Arthroscopy",
+    education: "Madras Medical College (Medical Degree), Harvard Medical School (Orthopedic Fellowship)",
+    professionalExperience: "Senior Orthopedic Surgeon - Apollo Hospital (20+ years), Consultant - Fortis Hospital (5+ years)",
+    languages: "English, Tamil, Korean",
+    treatmentsProcedures: "Joint Replacement, Arthroscopic Surgery, Sports Injury Treatment, Trauma Surgery",
+    awards: "Orthopedic Excellence Award 2023, Best Surgeon Award",
+    about: "Leading orthopedic surgeon with expertise in complex joint surgeries and sports medicine",
+    workExperience: "Senior Orthopedic Surgeon - Apollo Hospital (2005-Present), Consultant - Fortis Hospital (2000-2005)"
   },
   {
-    id: "#0047",
-    name: "Smith White",
-    specialization: "Gynecologist",
-    contactNumber: "(832) 296-1988",
-    availability: "Sunday to Friday: 01:00pm - 04:00pm",
-    location: "Sunshine Medical Center",
-    experience: "13 years",
-    avatar: "/doctorimg/doctor-6.png"
-  },
-  {
-    id: "#0039",
-    name: "Meera Gill",
-    specialization: "Dentist",
-    contactNumber: "(800) 869-3557",
-    availability: "Sunday to Friday: 08:00am - 03:00pm",
-    location: "Tokyo International Hospital",
-    experience: "11 years",
-    avatar: "/doctorimg/doctor-7.png"
-  },
-  {
-    id: "#0026",
-    name: "Gilbert Sandoval",
-    specialization: "Cardiologist",
-    contactNumber: "(888) 826-6890",
-    availability: "Sunday to Friday: 03:00am - 06:00pm",
-    location: "Advanced Orthopedic Center",
-    experience: "24 years",
-    avatar: "/doctorimg/doctor-8.png"
-  },
-  // Add more doctors for pagination testing
-  {
-    id: "#0027",
-    name: "Maria Rodriguez",
-    specialization: "Dermatologist",
-    contactNumber: "(555) 123-4567",
-    availability: "Monday to Friday: 09:00am - 05:00pm",
-    location: "Central Medical Plaza",
-    experience: "12 years",
-    avatar: "/doctorimg/doctor-1.png"
-  },
-  {
-    id: "#0028",
-    name: "David Kim",
-    specialization: "Orthopedic Surgeon",
-    contactNumber: "(555) 234-5678",
-    availability: "Tuesday to Saturday: 08:00am - 04:00pm",
-    location: "Sports Medicine Center",
-    experience: "18 years",
-    avatar: "/doctorimg/doctor-2.png"
-  },
-  {
-    id: "#0029",
-    name: "Sarah Johnson",
-    specialization: "Psychiatrist",
-    contactNumber: "(555) 345-6789",
-    availability: "Monday to Thursday: 10:00am - 06:00pm",
-    location: "Mental Health Institute",
-    experience: "14 years",
-    avatar: "/doctorimg/doctor-3.png"
-  },
-  {
-    id: "#0030",
-    name: "Michael Chen",
-    specialization: "Endocrinologist",
-    contactNumber: "(555) 456-7890",
-    availability: "Monday to Friday: 07:00am - 03:00pm",
-    location: "Diabetes Care Center",
-    experience: "16 years",
-    avatar: "/doctorimg/doctor-4.png"
+    id: 6,
+    doctorName: "Dr. Lisa Wang",
+    specialty: "Urologist",
+    location: "Hyderabad, India",
+    image: "img6.png",
+    experience: "22+ years",
+    rating: 9.7,
+    patientsTreated: "250+",
+    introduction: "Specializes in urological disorders and minimally invasive urological procedures. Expert in kidney stone treatment.",
+    specializations: "Urology, Kidney Stone Treatment, Prostate Surgery, Bladder Disorders, Urological Oncology",
+    education: "Osmania Medical College (Medical Degree), Cleveland Clinic (Urology Residency)",
+    professionalExperience: "Senior Urologist - KIMS Hospital (17+ years), Consultant - Continental Hospital (5+ years)",
+    languages: "English, Telugu, Mandarin",
+    treatmentsProcedures: "Kidney Stone Treatment, Prostate Surgery, Bladder Surgery, Urological Cancer Treatment",
+    awards: "Urology Excellence Award 2022, Innovation in Surgery Award",
+    about: "Experienced urologist with expertise in advanced urological procedures and treatments",
+    workExperience: "Senior Urologist - KIMS Hospital (2008-Present), Consultant - Continental Hospital (2003-2008)"
   }
 ]
 
@@ -145,10 +138,11 @@ export default function DoctorsList() {
   // Filter doctors based on search term
   const filteredDoctors = useMemo(() => {
     return doctorsData.filter(doctor =>
-      doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doctor.specialization.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doctor.doctorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doctor.specialty.toLowerCase().includes(searchTerm.toLowerCase()) ||
       doctor.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doctor.contactNumber.includes(searchTerm)
+      doctor.specializations.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doctor.treatmentsProcedures.toLowerCase().includes(searchTerm.toLowerCase())
     )
   }, [searchTerm])
 
@@ -162,7 +156,7 @@ export default function DoctorsList() {
     handlePageChange,
     handleItemsPerPageChange,
     resetPagination
-  } = usePagination(filteredDoctors, 8)
+  } = usePagination(filteredDoctors, 6)
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value)
@@ -193,7 +187,7 @@ export default function DoctorsList() {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-600 w-4 h-4" />
                   <input
                     type="text"
-                    placeholder="Search doctors, specialization, location..."
+                    placeholder="Search doctors, specialty, location, specializations..."
                     value={searchTerm}
                     onChange={handleSearch}
                     className="pl-10 pr-4 py-3 border-2 border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-80 text-gray-900 placeholder-gray-500 shadow-md bg-white"
@@ -218,31 +212,28 @@ export default function DoctorsList() {
             <table className="w-full">
               <thead className="bg-gradient-to-r from-blue-600 to-indigo-600">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
                     ID
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
                     Doctor Name
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
-                    Specialization
+                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
+                    Specialty
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
-                    <div className="flex items-center space-x-1">
-                      <span>Contact Number</span>
-                      <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                    </div>
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
-                    Availability
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
                     Location
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
                     Experience
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
+                    Rating
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
+                    Patients
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
                     Action
                   </th>
                 </tr>
@@ -250,15 +241,15 @@ export default function DoctorsList() {
               <tbody className="bg-white divide-y divide-blue-100">
                 {currentDoctors.map((doctor, index) => (
                   <tr key={index} className="hover:bg-blue-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-blue-700">
-                      {doctor.id}
+                    <td className="px-4 py-3 whitespace-nowrap text-sm font-bold text-blue-700">
+                      #{doctor.id}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-3 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-blue-200">
                           <img 
-                            src={doctor.avatar} 
-                            alt={doctor.name}
+                            src={`/doctorimg/doctor-${(doctor.id % 8) + 1}.png`} 
+                            alt={doctor.doctorName}
                             className="w-full h-full object-cover"
                             onError={(e) => {
                               // Fallback to initials if image fails to load
@@ -268,31 +259,32 @@ export default function DoctorsList() {
                           />
                           <div className="w-full h-full bg-blue-100 rounded-full flex items-center justify-center hidden">
                             <span className="text-sm font-semibold text-blue-600">
-                              {doctor.name.split(' ').map(n => n[0]).join('')}
+                              {doctor.doctorName.split(' ').map(n => n[0]).join('')}
                             </span>
                           </div>
                         </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-bold text-gray-900">{doctor.name}</div>
+                        <div className="ml-3">
+                          <div className="text-sm font-bold text-gray-900">{doctor.doctorName}</div>
+                          <div className="text-xs text-gray-500 truncate max-w-32">{doctor.specializations.split(',')[0]}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-blue-700">
-                      {doctor.specialization}
+                    <td className="px-4 py-3 whitespace-nowrap text-sm font-bold text-blue-700">
+                      {doctor.specialty}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-800">
-                      {doctor.contactNumber}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-700">
-                      {doctor.availability}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-800">
                       {doctor.location}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-800">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-800">
                       {doctor.experience}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm font-bold text-green-600">
+                      ⭐ {doctor.rating}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-700">
+                      {doctor.patientsTreated}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-2">
                         <button className="text-red-600 hover:text-red-700 p-2 rounded hover:bg-red-50 transition-colors">
                           <Trash2 className="w-4 h-4" />

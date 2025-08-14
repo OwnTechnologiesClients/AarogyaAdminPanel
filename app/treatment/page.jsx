@@ -11,272 +11,407 @@ import {
   Eye, 
   ChevronUp,
   Filter,
-  Building2
+  Building2,
+  Stethoscope,
+  DollarSign,
+  Clock,
+  UserCheck
 } from "lucide-react"
 import Image from "next/image"
 
-// Sample institutions data
+// Sample institutions data with treatment information
 const institutionsData = [
   {
     id: "#0047",
-    name: "Fortis",
-    institutionType: "Hospital",
+    name: "Fortis Escorts Heart Institute",
+    institutionType: "Cardiac Hospital",
     mobile: "+91-9987654345",
-    email: "hello@hinton.com",
-    location: "Vasant Kunj",
-    image: "/logo.png"
+    email: "info@fortisescorts.com",
+    location: "Okhla, New Delhi",
+    image: "/logo.png",
+    specializations: "Cardiology, Cardiac Surgery, Interventional Cardiology",
+    rating: 9.8,
+    treatments: ["Coronary Angioplasty", "Heart Transplant", "Cardiac Surgery"],
+    priceRange: "₹50,000 - ₹15,00,000",
+    experience: "25+ years"
   },
   {
     id: "#0048",
-    name: "Max",
-    institutionType: "Hospital",
+    name: "Max Super Speciality Hospital",
+    institutionType: "Multi-Specialty Hospital",
     mobile: "+91-9987654346",
-    email: "hello@max.com",
-    location: "Saket",
-    image: "/logo.png"
+    email: "info@maxhealthcare.com",
+    location: "Saket, New Delhi",
+    image: "/logo.png",
+    specializations: "Cardiology, Neurology, Oncology, Orthopedics",
+    rating: 9.6,
+    treatments: ["Coronary Angioplasty", "Brain Surgery", "Cancer Treatment"],
+    priceRange: "₹75,000 - ₹20,00,000",
+    experience: "30+ years"
   },
   {
     id: "#0049",
-    name: "Apollo",
-    institutionType: "Hospital",
+    name: "Apollo Hospitals Enterprise",
+    institutionType: "Multi-Specialty Hospital",
     mobile: "+91-9987654347",
-    email: "hello@apollo.com",
-    location: "Dwarka",
-    image: "/logo.png"
+    email: "info@apollohospitals.com",
+    location: "Sarita Vihar, New Delhi",
+    image: "/logo.png",
+    specializations: "Cardiology, Transplant, Oncology, Neurology",
+    rating: 9.7,
+    treatments: ["Coronary Angioplasty", "Liver Transplant", "Kidney Transplant"],
+    priceRange: "₹60,000 - ₹25,00,000",
+    experience: "35+ years"
   },
   {
     id: "#0050",
-    name: "Fortis",
-    institutionType: "Hospital",
+    name: "Medanta - The Medicity",
+    institutionType: "Multi-Specialty Hospital",
     mobile: "+91-9987654348",
-    email: "hello@fortis.com",
-    location: "Gurgaon",
-    image: "/logo.png"
+    email: "info@medanta.org",
+    location: "Gurgaon, Haryana",
+    image: "/logo.png",
+    specializations: "Cardiology, Cardiac Surgery, Transplant, Oncology",
+    rating: 9.9,
+    treatments: ["Coronary Angioplasty", "Heart Transplant", "Robotic Surgery"],
+    priceRange: "₹80,000 - ₹30,00,000",
+    experience: "20+ years"
   },
   {
     id: "#0051",
-    name: "Medanta",
-    institutionType: "Hospital",
+    name: "Safdarjung Hospital",
+    institutionType: "Government Hospital",
     mobile: "+91-9987654349",
-    email: "hello@medanta.com",
-    location: "Gurgaon",
-    image: "/logo.png"
+    email: "info@safdarjung.gov.in",
+    location: "Ansari Nagar, New Delhi",
+    image: "/logo.png",
+    specializations: "General Medicine, Surgery, Emergency Care",
+    rating: 8.5,
+    treatments: ["General Surgery", "Emergency Treatment", "Trauma Care"],
+    priceRange: "₹5,000 - ₹50,000",
+    experience: "50+ years"
   },
   {
     id: "#0052",
-    name: "Safdarjung",
-    institutionType: "Hospital",
+    name: "AIIMS Delhi",
+    institutionType: "Government Medical Institute",
     mobile: "+91-9987654350",
-    email: "hello@safdarjung.com",
-    location: "New Delhi",
-    image: "/logo.png"
+    email: "info@aiims.edu",
+    location: "Ansari Nagar, New Delhi",
+    image: "/logo.png",
+    specializations: "All Medical Specialties, Research, Education",
+    rating: 9.5,
+    treatments: ["Advanced Surgery", "Research Trials", "Specialized Care"],
+    priceRange: "₹10,000 - ₹1,00,000",
+    experience: "60+ years"
   },
   {
     id: "#0053",
-    name: "AIIMS",
-    institutionType: "Hospital",
+    name: "BLK Super Speciality Hospital",
+    institutionType: "Multi-Specialty Hospital",
     mobile: "+91-9987654351",
-    email: "hello@aiims.com",
-    location: "New Delhi",
-    image: "/logo.png"
+    email: "info@blkhospital.com",
+    location: "Pusa Road, New Delhi",
+    image: "/logo.png",
+    specializations: "Cardiology, Oncology, Neurology, Orthopedics",
+    rating: 9.4,
+    treatments: ["Coronary Angioplasty", "Cancer Treatment", "Joint Replacement"],
+    priceRange: "₹70,000 - ₹18,00,000",
+    experience: "28+ years"
   },
   {
     id: "#0054",
-    name: "BLK",
-    institutionType: "Hospital",
+    name: "Sir Ganga Ram Hospital",
+    institutionType: "Multi-Specialty Hospital",
     mobile: "+91-9987654352",
-    email: "hello@blk.com",
-    location: "Pusa Road",
-    image: "/logo.png"
+    email: "info@sgrh.com",
+    location: "Old Rajinder Nagar, New Delhi",
+    image: "/logo.png",
+    specializations: "Cardiology, Nephrology, Gastroenterology",
+    rating: 9.3,
+    treatments: ["Coronary Angioplasty", "Dialysis", "Endoscopy"],
+    priceRange: "₹55,000 - ₹12,00,000",
+    experience: "40+ years"
   },
   {
     id: "#0055",
-    name: "Gangaram",
-    institutionType: "Hospital",
+    name: "Holy Family Hospital",
+    institutionType: "Multi-Specialty Hospital",
     mobile: "+91-9987654353",
-    email: "hello@gangaram.com",
-    location: "Old Delhi",
-    image: "/logo.png"
+    email: "info@holyfamilyhospital.org",
+    location: "Okhla, New Delhi",
+    image: "/logo.png",
+    specializations: "Cardiology, Pediatrics, Obstetrics",
+    rating: 9.1,
+    treatments: ["Coronary Angioplasty", "Child Care", "Maternity Care"],
+    priceRange: "₹45,000 - ₹8,00,000",
+    experience: "35+ years"
   },
   {
     id: "#0056",
-    name: "Holy Family",
-    institutionType: "Hospital",
+    name: "Indraprastha Apollo Hospitals",
+    institutionType: "Multi-Specialty Hospital",
     mobile: "+91-9987654354",
-    email: "hello@holyfamily.com",
-    location: "Okhla",
-    image: "/logo.png"
+    email: "info@indapollo.com",
+    location: "Sarita Vihar, New Delhi",
+    image: "/logo.png",
+    specializations: "Cardiology, Transplant, Oncology, Neurology",
+    rating: 9.6,
+    treatments: ["Coronary Angioplasty", "Organ Transplant", "Cancer Care"],
+    priceRange: "₹65,000 - ₹22,00,000",
+    experience: "25+ years"
   },
   {
     id: "#0057",
-    name: "Indraprastha",
-    institutionType: "Hospital",
+    name: "Kailash Hospital",
+    institutionType: "Multi-Specialty Hospital",
     mobile: "+91-9987654355",
-    email: "hello@indraprastha.com",
-    location: "Dwarka",
-    image: "/logo.png"
+    email: "info@kailashhospital.com",
+    location: "Greater Noida, UP",
+    image: "/logo.png",
+    specializations: "Cardiology, General Surgery, Emergency Care",
+    rating: 8.8,
+    treatments: ["Coronary Angioplasty", "General Surgery", "Emergency Care"],
+    priceRange: "₹40,000 - ₹6,00,000",
+    experience: "20+ years"
   },
   {
     id: "#0058",
-    name: "Kailash",
-    institutionType: "Hospital",
+    name: "Lok Nayak Hospital",
+    institutionType: "Government Hospital",
     mobile: "+91-9987654356",
-    email: "hello@kailash.com",
-    location: "Greater Noida",
-    image: "/logo.png"
+    email: "info@loknayak.gov.in",
+    location: "Delhi Gate, New Delhi",
+    image: "/logo.png",
+    specializations: "General Medicine, Surgery, Emergency Care",
+    rating: 8.2,
+    treatments: ["General Surgery", "Emergency Treatment", "Trauma Care"],
+    priceRange: "₹3,000 - ₹30,000",
+    experience: "45+ years"
   },
   {
     id: "#0059",
-    name: "Lok Nayak",
-    institutionType: "Hospital",
+    name: "Moolchand Medcity",
+    institutionType: "Multi-Specialty Hospital",
     mobile: "+91-9987654357",
-    email: "hello@loknayak.com",
-    location: "Delhi Gate",
-    image: "/logo.png"
+    email: "info@moolchand.com",
+    location: "Lajpat Nagar, New Delhi",
+    image: "/logo.png",
+    specializations: "Cardiology, Orthopedics, Gynecology",
+    rating: 9.0,
+    treatments: ["Coronary Angioplasty", "Joint Replacement", "Women's Health"],
+    priceRange: "₹50,000 - ₹10,00,000",
+    experience: "30+ years"
   },
   {
     id: "#0060",
-    name: "Moolchand",
-    institutionType: "Hospital",
+    name: "Narayana Health",
+    institutionType: "Multi-Specialty Hospital",
     mobile: "+91-9987654358",
-    email: "hello@moolchand.com",
-    location: "Lajpat Nagar",
-    image: "/logo.png"
+    email: "info@narayanahealth.org",
+    location: "Gurgaon, Haryana",
+    image: "/logo.png",
+    specializations: "Cardiology, Cardiac Surgery, Transplant",
+    rating: 9.7,
+    treatments: ["Coronary Angioplasty", "Heart Surgery", "Organ Transplant"],
+    priceRange: "₹75,000 - ₹20,00,000",
+    experience: "25+ years"
   },
   {
     id: "#0061",
-    name: "Narayana",
-    institutionType: "Hospital",
+    name: "Paras Hospitals",
+    institutionType: "Multi-Specialty Hospital",
     mobile: "+91-9987654359",
-    email: "hello@narayana.com",
-    location: "Gurgaon",
-    image: "/logo.png"
+    email: "info@parashospitals.com",
+    location: "Gurgaon, Haryana",
+    image: "/logo.png",
+    specializations: "Cardiology, Neurology, Orthopedics",
+    rating: 9.2,
+    treatments: ["Coronary Angioplasty", "Neurological Care", "Joint Surgery"],
+    priceRange: "₹60,000 - ₹15,00,000",
+    experience: "22+ years"
   },
   {
     id: "#0062",
-    name: "Paras",
-    institutionType: "Hospital",
+    name: "Pushpawati Singhania Hospital",
+    institutionType: "Multi-Specialty Hospital",
     mobile: "+91-9987654360",
-    email: "hello@paras.com",
-    location: "Gurgaon",
-    image: "/logo.png"
+    email: "info@psrihospital.com",
+    location: "Saket, New Delhi",
+    image: "/logo.png",
+    specializations: "Cardiology, Gastroenterology, Nephrology",
+    rating: 9.4,
+    treatments: ["Coronary Angioplasty", "Digestive Care", "Kidney Care"],
+    priceRange: "₹70,000 - ₹16,00,000",
+    experience: "35+ years"
   },
   {
     id: "#0063",
-    name: "Pushpawati",
-    institutionType: "Hospital",
+    name: "Rajiv Gandhi Cancer Institute",
+    institutionType: "Cancer Hospital",
     mobile: "+91-9987654361",
-    email: "hello@pushpawati.com",
-    location: "Saket",
-    image: "/logo.png"
+    email: "info@rgci.org",
+    location: "Rohini, New Delhi",
+    image: "/logo.png",
+    specializations: "Oncology, Radiation Therapy, Surgical Oncology",
+    rating: 9.6,
+    treatments: ["Cancer Surgery", "Radiation Therapy", "Chemotherapy"],
+    priceRange: "₹1,00,000 - ₹25,00,000",
+    experience: "30+ years"
   },
   {
     id: "#0064",
-    name: "Rajiv Gandhi",
-    institutionType: "Hospital",
+    name: "Sitaram Bhartia Institute",
+    institutionType: "Multi-Specialty Hospital",
     mobile: "+91-9987654362",
-    email: "hello@rajivgandhi.com",
-    location: "Vasant Kunj",
-    image: "/logo.png"
+    email: "info@sitarambhartia.org",
+    location: "Qutab Institutional Area, New Delhi",
+    image: "/logo.png",
+    specializations: "Cardiology, Endocrinology, Diabetes Care",
+    rating: 9.1,
+    treatments: ["Coronary Angioplasty", "Diabetes Management", "Endocrine Care"],
+    priceRange: "₹45,000 - ₹8,00,000",
+    experience: "25+ years"
   },
   {
     id: "#0065",
-    name: "Sitaram",
-    institutionType: "Hospital",
+    name: "St. Stephen's Hospital",
+    institutionType: "Multi-Specialty Hospital",
     mobile: "+91-9987654363",
-    email: "hello@sitaram.com",
-    location: "Old Delhi",
-    image: "/logo.png"
+    email: "info@ststephenshospital.org",
+    location: "Tis Hazari, New Delhi",
+    image: "/logo.png",
+    specializations: "General Medicine, Surgery, Emergency Care",
+    rating: 8.9,
+    treatments: ["General Surgery", "Emergency Care", "Trauma Treatment"],
+    priceRange: "₹35,000 - ₹7,00,000",
+    experience: "40+ years"
   },
   {
     id: "#0066",
-    name: "St. Stephen's",
-    institutionType: "Hospital",
+    name: "Tata Memorial Hospital",
+    institutionType: "Cancer Hospital",
     mobile: "+91-9987654364",
-    email: "hello@ststephens.com",
-    location: "Tis Hazari",
-    image: "/logo.png"
+    email: "info@tmc.gov.in",
+    location: "Mumbai, Maharashtra",
+    image: "/logo.png",
+    specializations: "Oncology, Cancer Research, Surgical Oncology",
+    rating: 9.8,
+    treatments: ["Cancer Surgery", "Research Trials", "Palliative Care"],
+    priceRange: "₹50,000 - ₹20,00,000",
+    experience: "70+ years"
   },
   {
     id: "#0067",
-    name: "Tata Memorial",
-    institutionType: "Hospital",
+    name: "Wockhardt Hospitals",
+    institutionType: "Multi-Specialty Hospital",
     mobile: "+91-9987654365",
-    email: "hello@tatamemorial.com",
-    location: "Mumbai",
-    image: "/logo.png"
+    email: "info@wockhardthospitals.com",
+    location: "Mumbai, Maharashtra",
+    image: "/logo.png",
+    specializations: "Cardiology, Neurology, Orthopedics",
+    rating: 9.3,
+    treatments: ["Coronary Angioplasty", "Brain Surgery", "Joint Replacement"],
+    priceRange: "₹80,000 - ₹18,00,000",
+    experience: "30+ years"
   },
   {
     id: "#0068",
-    name: "Wockhardt",
-    institutionType: "Hospital",
+    name: "Yashoda Hospitals",
+    institutionType: "Multi-Specialty Hospital",
     mobile: "+91-9987654366",
-    email: "hello@wockhardt.com",
-    location: "Mumbai",
-    image: "/logo.png"
+    email: "info@yashodahospitals.com",
+    location: "Hyderabad, Telangana",
+    image: "/logo.png",
+    specializations: "Cardiology, Transplant, Oncology, Neurology",
+    rating: 9.5,
+    treatments: ["Coronary Angioplasty", "Organ Transplant", "Cancer Care"],
+    priceRange: "₹70,000 - ₹25,00,000",
+    experience: "35+ years"
   },
   {
     id: "#0069",
-    name: "Yashoda",
-    institutionType: "Hospital",
+    name: "Care Hospitals",
+    institutionType: "Multi-Specialty Hospital",
     mobile: "+91-9987654367",
-    email: "hello@yashoda.com",
-    location: "Hyderabad",
-    image: "/logo.png"
+    email: "info@carehospitals.com",
+    location: "Hyderabad, Telangana",
+    image: "/logo.png",
+    specializations: "Cardiology, Cardiac Surgery, Transplant",
+    rating: 9.4,
+    treatments: ["Coronary Angioplasty", "Heart Surgery", "Organ Transplant"],
+    priceRange: "₹65,000 - ₹20,00,000",
+    experience: "30+ years"
   },
   {
     id: "#0070",
-    name: "Care",
-    institutionType: "Hospital",
+    name: "KIMS Hospitals",
+    institutionType: "Multi-Specialty Hospital",
     mobile: "+91-9987654368",
-    email: "hello@care.com",
-    location: "Hyderabad",
-    image: "/logo.png"
+    email: "info@kimshospitals.com",
+    location: "Hyderabad, Telangana",
+    image: "/logo.png",
+    specializations: "Cardiology, Neurology, Orthopedics",
+    rating: 9.2,
+    treatments: ["Coronary Angioplasty", "Neurological Care", "Joint Surgery"],
+    priceRange: "₹60,000 - ₹16,00,000",
+    experience: "28+ years"
   },
   {
     id: "#0071",
-    name: "KIMS",
-    institutionType: "Hospital",
+    name: "Manipal Hospitals",
+    institutionType: "Multi-Specialty Hospital",
     mobile: "+91-9987654369",
-    email: "hello@kims.com",
-    location: "Hyderabad",
-    image: "/logo.png"
+    email: "info@manipalhospitals.com",
+    location: "Bangalore, Karnataka",
+    image: "/logo.png",
+    specializations: "Cardiology, Transplant, Oncology, Neurology",
+    rating: 9.6,
+    treatments: ["Coronary Angioplasty", "Organ Transplant", "Cancer Care"],
+    priceRange: "₹75,000 - ₹22,00,000",
+    experience: "40+ years"
   },
   {
     id: "#0072",
-    name: "Manipal",
-    institutionType: "Hospital",
+    name: "Narayana Health City",
+    institutionType: "Multi-Specialty Hospital",
     mobile: "+91-9987654370",
-    email: "hello@manipal.com",
-    location: "Bangalore",
-    image: "/logo.png"
+    email: "info@narayanahealth.org",
+    location: "Bangalore, Karnataka",
+    image: "/logo.png",
+    specializations: "Cardiology, Cardiac Surgery, Transplant",
+    rating: 9.7,
+    treatments: ["Coronary Angioplasty", "Heart Surgery", "Organ Transplant"],
+    priceRange: "₹80,000 - ₹25,00,000",
+    experience: "30+ years"
   },
   {
     id: "#0073",
-    name: "Narayana Health",
-    institutionType: "Hospital",
+    name: "Fortis Malar Hospital",
+    institutionType: "Multi-Specialty Hospital",
     mobile: "+91-9987654371",
-    email: "hello@narayanahealth.com",
-    location: "Bangalore",
-    image: "/logo.png"
+    email: "info@fortismalar.com",
+    location: "Chennai, Tamil Nadu",
+    image: "/logo.png",
+    specializations: "Cardiology, Neurology, Orthopedics",
+    rating: 9.3,
+    treatments: ["Coronary Angioplasty", "Brain Surgery", "Joint Replacement"],
+    priceRange: "₹70,000 - ₹18,00,000",
+    experience: "25+ years"
   },
   {
     id: "#0074",
-    name: "Fortis Malar",
-    institutionType: "Hospital",
+    name: "Apollo Hospitals Chennai",
+    institutionType: "Multi-Specialty Hospital",
     mobile: "+91-9987654372",
-    email: "hello@fortismalar.com",
-    location: "Chennai",
-    image: "/logo.png"
-  },
-  {
-    id: "#0075",
-    name: "Apollo Chennai",
-    institutionType: "Hospital",
-    mobile: "+91-9987654373",
-    email: "hello@apollochennai.com",
-    location: "Chennai",
-    image: "/logo.png"
+    email: "info@apollochennai.com",
+    location: "Chennai, Tamil Nadu",
+    image: "/logo.png",
+    specializations: "Cardiology, Transplant, Oncology, Neurology",
+    rating: 9.5,
+    treatments: ["Coronary Angioplasty", "Organ Transplant", "Cancer Care"],
+    priceRange: "₹75,000 - ₹22,00,000",
+    experience: "35+ years"
   }
 ]
 
@@ -289,7 +424,11 @@ export default function InstitutionsList() {
       institution.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       institution.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       institution.mobile.includes(searchTerm) ||
-      institution.id.toLowerCase().includes(searchTerm.toLowerCase())
+      institution.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      institution.specializations.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      institution.treatments.some(treatment => 
+        treatment.toLowerCase().includes(searchTerm.toLowerCase())
+      )
     )
   }, [searchTerm])
 
@@ -303,7 +442,7 @@ export default function InstitutionsList() {
     handlePageChange,
     handleItemsPerPageChange,
     resetPagination
-  } = usePagination(filteredInstitutions, 8)
+  } = usePagination(filteredInstitutions, 10)
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value)
@@ -316,7 +455,7 @@ export default function InstitutionsList() {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Institutions List</h1>
-            <p className="text-gray-700 text-lg">View and manage all institutions</p>
+            <p className="text-gray-700 text-lg">View and manage all medical institutions</p>
           </div>
           <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-sm">
             Add New Institution
@@ -332,7 +471,7 @@ export default function InstitutionsList() {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600 w-4 h-4" />
                   <input
                     type="text"
-                    placeholder="Search institutions, email, mobile..."
+                    placeholder="Search institutions, specializations, treatments..."
                     value={searchTerm}
                     onChange={handleSearch}
                     className="pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-80 text-gray-900 placeholder-gray-500 bg-white"
@@ -361,19 +500,19 @@ export default function InstitutionsList() {
                     ID
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">
-                    Name
+                    Institution
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">
-                    institutionType
+                    Type & Specializations
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">
-                    Mobile
+                    Rating & Experience
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">
-                    Email
+                    Treatments & Price Range
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">
-                    Location
+                    Contact
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">
                     Action
@@ -388,31 +527,50 @@ export default function InstitutionsList() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-gray-200">
+                        <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-gray-200">
                           <Image
                             src={institution.image}
                             alt={institution.name}
-                            width={40}
-                            height={40}
+                            width={48}
+                            height={48}
                             className="w-full h-full object-cover"
                           />
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-bold text-gray-900">{institution.name}</div>
+                          <div className="text-xs text-gray-500">{institution.location}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {institution.institutionType}
+                    <td className="px-6 py-4">
+                      <div className="space-y-1">
+                        <div className="text-sm font-semibold text-gray-900">{institution.institutionType}</div>
+                        <div className="text-xs text-gray-600 max-w-xs truncate">{institution.specializations}</div>
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {institution.mobile}
+                    <td className="px-6 py-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-1">
+                          <span className="text-sm font-semibold text-gray-900">{institution.rating}</span>
+                          <span className="text-xs text-gray-500">/10</span>
+                        </div>
+                        <div className="text-xs text-gray-600">{institution.experience}</div>
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {institution.email}
+                    <td className="px-6 py-4">
+                      <div className="space-y-1">
+                        <div className="text-xs text-gray-600 max-w-xs">
+                          {institution.treatments.slice(0, 2).join(", ")}
+                          {institution.treatments.length > 2 && "..."}
+                        </div>
+                        <div className="text-xs font-medium text-green-600">{institution.priceRange}</div>
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {institution.location}
+                    <td className="px-6 py-4">
+                      <div className="space-y-1">
+                        <div className="text-xs text-gray-900">{institution.mobile}</div>
+                        <div className="text-xs text-gray-600 max-w-xs truncate">{institution.email}</div>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-2">

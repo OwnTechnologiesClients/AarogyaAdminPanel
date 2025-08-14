@@ -5,99 +5,48 @@ import { Layout } from "@/components/layout"
 import { Button } from "@/components/ui/button"
 import ProfileDetails from "./profile-details"
 
-// Sample data for dropdowns
-const specialties = [
-  "Orthopaedics",
-  "Cardiology", 
-  "Neurology",
-  "Oncology",
-  "Dermatology",
-  "Pediatrics",
-  "General Surgery",
-  "Internal Medicine"
-];
-
-const treatments = {
-  "Orthopaedics": [
-    "Knee Replacement",
-    "Hip Replacement", 
-    "Spine Surgery",
-    "Arthroscopy",
-    "Fracture Fixation"
-  ],
-  "Cardiology": [
-    "Angioplasty",
-    "Bypass Surgery",
-    "Heart Valve Surgery",
-    "Pacemaker Implantation"
-  ],
-  "Neurology": [
-    "Brain Tumor Surgery",
-    "Spine Surgery",
-    "Epilepsy Surgery",
-    "Deep Brain Stimulation"
-  ]
-};
-
-const hospitals = [
-  "Foritis",
-  "Max",
-  "Apollo",
-  "Fortis",
-  "Medanta",
-  "AIIMS",
-  "Tata Memorial",
-  "Kokilaben Hospital"
-];
-
-const doctors = [
-  "Prof. Anand",
-  "Prof. Raj",
-  "Dr. Sharma",
-  "Dr. Patel",
-  "Dr. Singh",
-  "Dr. Kumar",
-  "Dr. Verma"
-];
-
 export default function AddTreatment() {
   const [activeTab, setActiveTab] = useState("treatment");
-  const [selectedSpecialty, setSelectedSpecialty] = useState("Orthopaedics");
-  const [selectedTreatment, setSelectedTreatment] = useState("Knee Replacement");
-  const [selectedHospitals, setSelectedHospitals] = useState(["Foritis", "Max", "Apollo"]);
-  const [selectedDoctors, setSelectedDoctors] = useState(["Prof. Anand", "Prof. Raj"]);
+  const [treatmentData, setTreatmentData] = useState({
+    treatmentId: "",
+    treatmentName: "",
+    price: "",
+    description: "",
+    duration: "",
+    recovery: "",
+    hospital: "",
+    hospitalSelectionCriteria: "",
+    topDoctors: "",
+    doctorSelectionCriteria: "",
+    diagnosticTools: "",
+    advancedTreatmentOptions: "",
+    advantages: "",
+    cost: "",
+    faq: ""
+  });
 
-  const handleSpecialtyChange = (specialty) => {
-    setSelectedSpecialty(specialty);
-    // Reset treatment when specialty changes
-    if (treatments[specialty] && treatments[specialty].length > 0) {
-      setSelectedTreatment(treatments[specialty][0]);
-    } else {
-      setSelectedTreatment("");
-    }
+  const handleInputChange = (field, value) => {
+    setTreatmentData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
-  const handleHospitalToggle = (hospital) => {
-    setSelectedHospitals(prev => 
-      prev.includes(hospital) 
-        ? prev.filter(h => h !== hospital)
-        : [...prev, hospital]
-    );
-  };
-
-  const handleDoctorToggle = (doctor) => {
-    setSelectedDoctors(prev => 
-      prev.includes(doctor) 
-        ? prev.filter(d => d !== doctor)
-        : [...prev, doctor]
-    );
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log("Treatment Data:", treatmentData);
+    // Handle form submission here
   };
 
   return (
     <Layout>
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">Add Treatment</h1>
-        
+      <div className="space-y-8">
+        {/* Page Header */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Add New Treatment</h1>
+          <p className="text-gray-600 text-lg">Fill in the comprehensive details about the medical treatment</p>
+        </div>
+
         {/* Navigation Tabs */}
         <div className="flex space-x-8 border-b border-gray-200">
           <button
@@ -131,166 +80,247 @@ export default function AddTreatment() {
 
         {/* Treatment Details Form */}
         {activeTab === "treatment" && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 space-y-8">
-            <div className="space-y-6">
-              {/* Select Specialty */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-3">Select Specialty</label>
-                <div className="relative">
-                  <select
-                    value={selectedSpecialty}
-                    onChange={(e) => handleSpecialtyChange(e.target.value)}
-                    className="w-full border border-gray-300 rounded-md px-4 py-3 text-gray-600 bg-white appearance-none cursor-pointer focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    {specialties.map((specialty) => (
-                      <option key={specialty} value={specialty}>
-                        {specialty}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Section 1: Basic Treatment Information */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="flex items-center mb-6">
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                  <span className="text-blue-600 font-semibold text-sm">1</span>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Basic Treatment Information</h3>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-900">Treatment ID *</label>
+                  <input 
+                    type="text" 
+                    value={treatmentData.treatmentId}
+                    onChange={(e) => handleInputChange('treatmentId', e.target.value)}
+                    placeholder="e.g., cardiology" 
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-900">Treatment Name *</label>
+                  <input 
+                    type="text" 
+                    value={treatmentData.treatmentName}
+                    onChange={(e) => handleInputChange('treatmentName', e.target.value)}
+                    placeholder="e.g., Coronary Angioplasty" 
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-900">Price *</label>
+                  <input 
+                    type="text" 
+                    value={treatmentData.price}
+                    onChange={(e) => handleInputChange('price', e.target.value)}
+                    placeholder="e.g., ₹8,500" 
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-900">Duration</label>
+                  <input 
+                    type="text" 
+                    value={treatmentData.duration}
+                    onChange={(e) => handleInputChange('duration', e.target.value)}
+                    placeholder="e.g., 1-2 hours" 
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-900">Recovery Time</label>
+                  <input 
+                    type="text" 
+                    value={treatmentData.recovery}
+                    onChange={(e) => handleInputChange('recovery', e.target.value)}
+                    placeholder="e.g., 1-3 days" 
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+                  />
                 </div>
               </div>
+              
+              <div className="mt-6 space-y-2">
+                <label className="block text-sm font-semibold text-gray-900">Description *</label>
+                <textarea 
+                  value={treatmentData.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  rows="3"
+                  placeholder="e.g., Minimally invasive procedure to open blocked coronary arteries" 
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+                  required
+                />
+              </div>
+            </div>
 
-              {/* Select Treatment */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-3">Select Treatment</label>
-                <div className="relative">
-                  <select
-                    value={selectedTreatment}
-                    onChange={(e) => setSelectedTreatment(e.target.value)}
-                    className="w-full border border-gray-300 rounded-md px-4 py-3 text-gray-600 bg-white appearance-none cursor-pointer focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    {treatments[selectedSpecialty]?.map((treatment) => (
-                      <option key={treatment} value={treatment}>
-                        {treatment}
-                      </option>
-                    )) || <option value="">No treatments available</option>}
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
+            {/* Section 2: Hospital & Doctor Information */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="flex items-center mb-6">
+                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                  <span className="text-green-600 font-semibold text-sm">2</span>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Hospital & Doctor Information</h3>
+              </div>
+              
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-900">Hospital (related to treatment)</label>
+                  <textarea 
+                    value={treatmentData.hospital}
+                    onChange={(e) => handleInputChange('hospital', e.target.value)}
+                    rows="3"
+                    placeholder="Enter hospital name and data as mentioned on Hospital_Data_template" 
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-900">What helps to find the best hospital for this treatment?</label>
+                  <textarea 
+                    value={treatmentData.hospitalSelectionCriteria}
+                    onChange={(e) => handleInputChange('hospitalSelectionCriteria', e.target.value)}
+                    rows="4"
+                    placeholder="Enter criteria for hospital selection (comma separated) e.g., Specialized treatment experience, Board certifications, Success rates, Patient testimonials, International experience" 
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-900">Top doctors for this treatment</label>
+                  <textarea 
+                    value={treatmentData.topDoctors}
+                    onChange={(e) => handleInputChange('topDoctors', e.target.value)}
+                    rows="3"
+                    placeholder="Enter related doctors details" 
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-900">How to select the best doctor for this treatment?</label>
+                  <textarea 
+                    value={treatmentData.doctorSelectionCriteria}
+                    onChange={(e) => handleInputChange('doctorSelectionCriteria', e.target.value)}
+                    rows="3"
+                    placeholder="e.g., Latest Treatment Options" 
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+                  />
                 </div>
               </div>
+            </div>
 
-              {/* Select Best Hospital */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-3">Select Best Hospital</label>
-                <div className="relative">
-                  <div className="w-full border border-gray-300 rounded-md px-4 py-3 text-gray-600 bg-white min-h-[52px] flex items-center">
-                    <div className="flex flex-wrap gap-2">
-                      {selectedHospitals.map((hospital) => (
-                        <span
-                          key={hospital}
-                          className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800"
-                        >
-                          {hospital}
-                          <button
-                            type="button"
-                            onClick={() => handleHospitalToggle(hospital)}
-                            className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-400 hover:bg-blue-200 hover:text-blue-500"
-                          >
-                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                            </svg>
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
+            {/* Section 3: Treatment Benefits & Features */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="flex items-center mb-6">
+                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                  <span className="text-purple-600 font-semibold text-sm">3</span>
                 </div>
-                {/* Hospital Options */}
-                <div className="mt-2 grid grid-cols-2 gap-2">
-                  {hospitals.map((hospital) => (
-                    <label key={hospital} className="flex items-center space-x-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={selectedHospitals.includes(hospital)}
-                        onChange={() => handleHospitalToggle(hospital)}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <span className="text-sm text-gray-700">{hospital}</span>
-                    </label>
-                  ))}
+                <h3 className="text-lg font-semibold text-gray-900">Treatment Benefits & Features</h3>
+              </div>
+              
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-900">Treatment Benefits & Features</label>
+                  <textarea 
+                    value={treatmentData.diagnosticTools}
+                    onChange={(e) => handleInputChange('diagnosticTools', e.target.value)}
+                    rows="6"
+                    placeholder="Enter treatment benefits and features (comma separated) e.g., Treatment Benefits, Minimally Invasive Procedures, High Success Rate, Advanced surgical techniques, Proven effectiveness, Robotic Surgery, Minimal Recovery Time, Laser Treatment, Reduced Complications, Targeted Therapy, Better Outcomes, Recent Advancements, Why Choose This Treatment, Innovative Techniques, Expert Care, Cutting-edge treatment methods, Specialized medical expertise, 3D Imaging, Advanced Technology, Precision Medicine, Comprehensive Care, Regenerative Therapy, Patient Support" 
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-900">Advanced treatment options</label>
+                  <textarea 
+                    value={treatmentData.advancedTreatmentOptions}
+                    onChange={(e) => handleInputChange('advancedTreatmentOptions', e.target.value)}
+                    rows="3"
+                    placeholder="Enter advanced treatment options for this procedure" 
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+                  />
                 </div>
               </div>
+            </div>
 
-              {/* Select Doctors */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-3">Select Doctors</label>
-                <div className="relative">
-                  <div className="w-full border border-gray-300 rounded-md px-4 py-3 text-gray-600 bg-white min-h-[52px] flex items-center">
-                    <div className="flex flex-wrap gap-2">
-                      {selectedDoctors.map((doctor) => (
-                        <span
-                          key={doctor}
-                          className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800"
-                        >
-                          {doctor}
-                          <button
-                            type="button"
-                            onClick={() => handleDoctorToggle(doctor)}
-                            className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-green-400 hover:bg-green-200 hover:text-green-500"
-                          >
-                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                            </svg>
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
+            {/* Section 4: Advantages & Cost */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="flex items-center mb-6">
+                <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center mr-3">
+                  <span className="text-orange-600 font-semibold text-sm">4</span>
                 </div>
-                {/* Doctor Options */}
-                <div className="mt-2 grid grid-cols-2 gap-2">
-                  {doctors.map((doctor) => (
-                    <label key={doctor} className="flex items-center space-x-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={selectedDoctors.includes(doctor)}
-                        onChange={() => handleDoctorToggle(doctor)}
-                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
-                      />
-                      <span className="text-sm text-gray-700">{doctor}</span>
-                    </label>
-                  ))}
+                <h3 className="text-lg font-semibold text-gray-900">Advantages & Cost</h3>
+              </div>
+              
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-900">Advantages of this treatment</label>
+                  <textarea 
+                    value={treatmentData.advantages}
+                    onChange={(e) => handleInputChange('advantages', e.target.value)}
+                    rows="3"
+                    placeholder="Enter advantages (comma separated) e.g., Treatment cost worldwide, Treatment name, ₹7,65,000" 
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+                  />
                 </div>
+                
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-900">Cost *</label>
+                  <input 
+                    type="text" 
+                    value={treatmentData.cost}
+                    onChange={(e) => handleInputChange('cost', e.target.value)}
+                    placeholder="e.g., ₹8,500 / ₹7,65,000" 
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Section 5: FAQ */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="flex items-center mb-6">
+                <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center mr-3">
+                  <span className="text-teal-600 font-semibold text-sm">5</span>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Frequently Asked Questions</h3>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-900">FAQ</label>
+                <textarea 
+                  value={treatmentData.faq}
+                  onChange={(e) => handleInputChange('faq', e.target.value)}
+                  rows="6"
+                  placeholder="Enter frequently asked questions (comma separated) e.g., Frequently Asked Questions about this treatment, What is this treatment?, How long does this treatment take?, What is the cost of this treatment?, What are the risks of this treatment?, How do I prepare for this treatment?" 
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+                />
               </div>
             </div>
 
             {/* Action Buttons */}
             <div className="flex justify-end space-x-4 pt-8 border-t border-gray-200">
-              <Button
-                type="button"
-                variant="outline"
-                className="px-8 py-3"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                className="px-8 py-3 bg-blue-600 hover:bg-blue-700"
-              >
-                Save Treatment Details
-              </Button>
-            </div>
-          </div>
+          <button 
+            type="button" 
+            className="px-8 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium transition-colors duration-200"
+          >
+            Cancel
+          </button>
+          <button 
+            type="submit" 
+            className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium transition-colors duration-200"
+          >
+            Create Treatment Profile
+          </button>
+        </div>
+          </form>
         )}
 
         {/* Profile & Bio Tab */}

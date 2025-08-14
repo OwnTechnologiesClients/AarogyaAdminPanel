@@ -9,7 +9,7 @@ const pathMap = {
   "/doctors": "Doctors",
   "/doctors/list": "Doctors List",
   "/doctors/add": "Add Doctor",
-  "/doctors/edit": "Edit Doctor",
+
   "/treatment": "Treatment Dashboard",
   "/treatment/add": "Add Treatment",
   "/hospital": "Hospital List",

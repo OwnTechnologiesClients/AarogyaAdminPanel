@@ -144,7 +144,7 @@ export default function ProfileDetails() {
                 value={item.name}
                 onChange={(e) => {
                   setAdvancedTreatments(prev => 
-                    prev.map(t => t.id === item.id ? { ...t, name: e.target.value } : t)
+                    prev.map(t => t.id === item.id ? { ...t, name: e.target.value } : d)
                   );
                 }}
                 className="text-lg font-medium text-gray-900 border-b border-transparent focus:border-blue-500 focus:outline-none px-1 py-1"
@@ -163,7 +163,7 @@ export default function ProfileDetails() {
               value={item.description}
               onChange={(e) => {
                 setAdvancedTreatments(prev => 
-                  prev.map(t => t.id === item.id ? { ...t, description: e.target.value } : t)
+                  prev.map(t => t.id === item.id ? { ...t, description: e.target.value } : d)
                 );
               }}
               className="w-full h-24 p-3 border border-gray-300 rounded-md resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
