@@ -4,9 +4,19 @@ import { useState, useEffect } from "react"
 import { Navbar } from "@/components/navbar"
 import { Sidebar } from "@/components/sidebar"
 import { Breadcrumb } from "@/components/breadcrumb"
+import { useRouter } from "next/navigation"
 
 export function Layout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const router = useRouter()
+
+  // Authentication check: redirect to /login if not logged in
+  useEffect(() => {
+    const token = localStorage.getItem('adminToken')
+    if (!token) {
+      router.replace('/login')
+    }
+  }, [router])
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen)
