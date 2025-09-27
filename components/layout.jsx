@@ -12,7 +12,7 @@ export function Layout({ children }) {
 
   // Authentication check: redirect to /login if not logged in
   useEffect(() => {
-    const token = localStorage.getItem('adminToken')
+    const token = localStorage.getItem('token') || localStorage.getItem('adminToken')
     if (!token) {
       router.replace('/login')
     }

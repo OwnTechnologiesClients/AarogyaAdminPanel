@@ -22,14 +22,22 @@ import { cn } from "@/lib/utils"
 import Image from "next/image"
 
 const menuItems = [
+   {
+    title: "Hospital Dashboard",
+    icon: Building2,
+    href: "/hospital",
+    subItems: [
+      { title: "Add Hospital", href: "/hospital/add" },
+      { title: "Hospital List", href: "/hospital" },
+    ]
+  },
   {
     title: "Doctors Dashboard",
     icon: Stethoscope,
     href: "/doctors",
     subItems: [
-      { title: "Doctors List", href: "/doctors/list" },
       { title: "Add Doctor", href: "/doctors/add" },
-  
+      { title: "Doctors List", href: "/doctors" },
     ]
   },
   {
@@ -37,20 +45,11 @@ const menuItems = [
     icon: Users,
     href: "/treatment",
     subItems: [
-      { title: "Treatments List", href: "/treatment" },
       { title: "Add Treatment", href: "/treatment/add" },
+      { title: "Treatments List", href: "/treatment" },
     ]
   },
-  {
-    title: "Hospital Dashboard",
-    icon: Building2,
-    href: "/hospital",
-    subItems: [
-      { title: "Hospital List", href: "/hospital" },
-      { title: "Add Hospital", href: "/hospital/add" },
-    ]
-  },
- 
+
   {
     title: "Chat",
     icon: MessageCircle,
@@ -97,7 +96,7 @@ export function Sidebar({ isOpen, onToggle }) {
   // Auto-expand the section containing the current active page
   useEffect(() => {
     const currentMenuItem = menuItems.find(item => 
-      item.subItems && item.subItems.some(subItem => isActive(subItem.href))
+      item.subItems && item.subItems.some(subItem => isExactActive(subItem.href))
     )
     
     if (currentMenuItem) {
@@ -155,7 +154,10 @@ export function Sidebar({ isOpen, onToggle }) {
   }
 
   const isExpanded = (title) => expandedItem === title
-  const isActive = (href) => pathname === href || pathname.startsWith(href + "/")
+  // Parent items active when current path is under their section
+  const isParentActive = (href) => pathname === href || pathname.startsWith(href + "/")
+  // Exact match for sub items
+  const isExactActive = (href) => pathname === href
 
   // Close mobile sidebar when clicking on a link
   const handleLinkClick = () => {
@@ -197,7 +199,7 @@ export function Sidebar({ isOpen, onToggle }) {
         {/* Header with Mobile Toggle */}
         <div className="flex items-center justify-between py-6 px-4 border-b border-gray-200">
           <div className="flex items-center">
-            <Image src="/logo.png" alt="Aarogya Admin Logo" width={350} height={300} className="h-10  w-auto" />
+            <Image src="/logo.png" alt="Aarogya Admin Logo" width={350} height={300} className="h-10  w-auto" priority />
           </div>
           {isMobile && (
             <Button
@@ -218,7 +220,7 @@ export function Sidebar({ isOpen, onToggle }) {
             const Icon = item.icon
             const hasSubItems = item.subItems && item.subItems.length > 0
             const expanded = isExpanded(item.title)
-            const active = isActive(item.href)
+            const active = isParentActive(item.href)
 
             return (
               <div key={item.title}>
@@ -278,7 +280,7 @@ export function Sidebar({ isOpen, onToggle }) {
                   >
                     <div className="ml-6 mt-2 space-y-1 max-h-80 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                       {item.subItems.map((subItem) => {
-                        const subActive = isActive(subItem.href)
+                        const subActive = pathname === subItem.href
                         return (
                           <Link
                             key={subItem.title}

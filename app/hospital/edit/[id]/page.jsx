@@ -1,15 +1,19 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from "react"
 import { Layout } from "@/components/layout"
+import { useParams, useRouter } from "next/navigation"
+import HospitalApi from "@/lib/api/hospitalApi"
 import Swal from 'sweetalert2'
 import { Briefcase, User, Building2, Star, Users, Bed, Calendar, Mail, Phone, Globe, MapPin, Award, Info, Navigation, Plus, Trash2, Stethoscope, Microscope, Camera, ChevronDown, ChevronUp } from "lucide-react"
-import { useRouter } from 'next/navigation'
-import HospitalApi from '@/lib/api/hospitalApi'
 
-export default function AddHospital() {
+export default function EditHospitalPage() {
+  const { id } = useParams()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState('hospital-details')
+  const [formData, setFormData] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [galleryPreviews, setGalleryPreviews] = useState([])
   const [expandedSections, setExpandedSections] = useState({
     specialties: true,
@@ -18,55 +22,57 @@ export default function AddHospital() {
     gallery: true
   })
 
-  const [formData, setFormData] = useState({
-    id: '',
-    name: '',
-    image: null,
-    rating: {},
-    location: '',
-    address: '',
-    doctorsCount: '',
-    established: '',
-    accreditation: [],
-    contact: {
-      phone: '',
-      email: '',
-      website: '',
-      emergency: '',
-      address: ''
-    },
-    userScore: '',
-    googleRating: '',
-    specialties: [],
-    hospitalFeatures: [],
-    advancedMedicalEquipment: [],
-    about: {
-      description: '',
-      vision: '',
-      mission: ''
-    },
-    overview: {
-      founded: '',
-      patients: '',
-      doctors: '',
-      clinicType: [],
-      typeOfCare: [],
-      ageGroup: [],
-      sizeAndCapacity: {
-        ot: '',
-        icu: '',
-        patientBeds: ''
+  useEffect(() => {
+    // Redirect to login if not authenticated
+    const token = typeof window !== 'undefined' ? (localStorage.getItem('adminToken') || localStorage.getItem('token')) : null
+    if (!token) {
+      router.push('/login')
+      return
+    }
+    if (!id) return
+    const fetchOne = async () => {
+      setLoading(true)
+      try {
+        const json = await HospitalApi.getById(id)
+        if (!json?.success) throw new Error(json?.message || 'Failed to load')
+        // prepare initial form state
+        setFormData({
+          id: json.data.id,
+          name: json.data.name,
+          location: json.data.location,
+          address: json.data.contact?.address || '',
+          established: json.data.overview?.founded || '',
+          accreditation: json.data.accreditation || [],
+          contact: json.data.contact || {},
+          doctorsCount: json.data.overview?.doctors || '',
+          userScore: json.data.rating?.userScore || '',
+          googleRating: json.data.rating?.googleRating || '',
+          image: json.data.image || null,
+          specialties: (json.data.specialties || []).map(s => ({
+            ...s,
+            keyServices: convertKeyServicesForDisplay(s.keyServices)
+          })),
+          features: json.data.hospitalFeatures || [],
+          operatingHours: json.data.operatingHours || {},
+          gallery: json.data.gallery || [],
+          // Additional fields from Hospital model
+          rating: json.data.rating || {},
+          overview: json.data.overview || {},
+          about: json.data.about || {},
+          hospitalFeatures: json.data.hospitalFeatures || [],
+          advancedMedicalEquipment: json.data.advancedMedicalEquipment || [],
+          nearbyLandmarks: json.data.nearbyLandmarks || [],
+          additionalServices: json.data.additionalServices || [],
+          howToReach: json.data.howToReach || ''
+        })
+      } catch (e) {
+        setError(e?.message || 'Error')
+      } finally {
+        setLoading(false)
       }
-    },
-    howToReach: '',
-    operatingHours: {
-      emergency: '',
-      opd: ''
-    },
-    gallery: []
-  })
-
-  const [submitting, setSubmitting] = useState(false)
+    }
+    fetchOne()
+  }, [id])
 
   // Helper functions for form management
   const toggleSection = (section) => {
@@ -83,7 +89,7 @@ export default function AddHospital() {
     })
 
     // Generate new previews for gallery items
-    const newPreviews = formData.gallery.map((item) => {
+    const newPreviews = (formData?.gallery || []).map((item) => {
       if (item && typeof item === 'object' && item instanceof File) {
         return URL.createObjectURL(item)
       }
@@ -97,10 +103,10 @@ export default function AddHospital() {
         if (url && url.startsWith('blob:')) URL.revokeObjectURL(url)
       })
     }
-  }, [formData.gallery])
+  }, [formData?.gallery])
 
   const updateSpecialty = (idx, field, value) => {
-    const updated = [...formData.specialties]
+    const updated = [...(formData?.specialties || [])]
     if (field === 'keyServices') {
       // Store the raw input value for keyServices
       updated[idx] = { ...updated[idx], [field]: value }
@@ -118,19 +124,27 @@ export default function AddHospital() {
     return Array.isArray(keyServicesValue) ? keyServicesValue : []
   }
 
+  const convertKeyServicesForDisplay = (keyServicesValue) => {
+    // Convert array to comma-separated string for display
+    if (Array.isArray(keyServicesValue)) {
+      return keyServicesValue.join(', ')
+    }
+    return keyServicesValue || ''
+  }
+
   const addSpecialty = () => {
     setFormData(prev => ({ 
       ...prev, 
-      specialties: [...prev.specialties, { name: '', rating: '', doctorsCount: '', description: '', keyServices: '' }] 
+      specialties: [...(prev.specialties || []), { name: '', rating: '', doctorsCount: '', description: '', keyServices: '' }] 
     }))
   }
 
   const removeSpecialty = (idx) => {
-    setFormData(prev => ({ ...prev, specialties: prev.specialties.filter((_, i) => i !== idx) }))
+    setFormData(prev => ({ ...prev, specialties: (prev.specialties || []).filter((_, i) => i !== idx) }))
   }
 
   const updateHospitalFeature = (idx, field, value) => {
-    const updated = [...(formData.hospitalFeatures || [])]
+    const updated = [...(formData?.hospitalFeatures || [])]
     updated[idx] = { ...updated[idx], [field]: value }
     setFormData(prev => ({ ...prev, hospitalFeatures: updated }))
   }
@@ -147,7 +161,7 @@ export default function AddHospital() {
   }
 
   const updateAdvancedEquipment = (idx, field, value) => {
-    const updated = [...(formData.advancedMedicalEquipment || [])]
+    const updated = [...(formData?.advancedMedicalEquipment || [])]
     updated[idx] = { ...updated[idx], [field]: value }
     setFormData(prev => ({ ...prev, advancedMedicalEquipment: updated }))
   }
@@ -164,96 +178,180 @@ export default function AddHospital() {
   }
 
   const updateGalleryItem = (idx, file) => {
-    const updated = [...formData.gallery]
+    const updated = [...(formData?.gallery || [])]
     updated[idx] = file
     setFormData(prev => ({ ...prev, gallery: updated }))
   }
 
   const addGalleryItem = () => {
-    setFormData(prev => ({ ...prev, gallery: [...prev.gallery, null] }))
+    setFormData(prev => ({ ...prev, gallery: [...(prev.gallery || []), null] }))
   }
 
   const removeGalleryItem = (idx) => {
-    setFormData(prev => ({ ...prev, gallery: prev.gallery.filter((_, i) => i !== idx) }))
+    setFormData(prev => ({ ...prev, gallery: (prev.gallery || []).filter((_, i) => i !== idx) }))
   }
 
-  const submitHospital = async () => {
-    if (submitting) return
-    // Basic validation
-    if (!formData.id || !formData.name || !formData.location) {
-      await Swal.fire({
-        title: 'Validation Error!',
-        text: 'Please fill required fields: ID, Name, Location',
-        icon: 'warning',
-        confirmButtonText: 'OK'
-      })
+  const submitUpdate = async () => {
+    if (!formData) return
+    // Basic client-side validation to avoid sending invalid values
+    const errors = []
+    if (!formData.name || !formData.name.trim()) errors.push('Hospital name is required')
+    if (!formData.location || !formData.location.trim()) errors.push('Location is required')
+    if (formData.established !== undefined && String(formData.established).trim() === '') errors.push('Established is required')
+    if (formData.doctorsCount !== undefined && String(formData.doctorsCount).trim() === '') errors.push('Doctors count is required')
+    if (errors.length) {
+      alert(errors[0])
       return
     }
-    if (!formData.image) {
-      await Swal.fire({
-        title: 'Validation Error!',
-        text: 'Please upload the main hospital image',
-        icon: 'warning',
-        confirmButtonText: 'OK'
+    const fd = new FormData()
+    if (formData.id && formData.id.trim()) fd.append('id', formData.id.trim())
+    if (formData.name && formData.name.trim()) fd.append('name', formData.name.trim())
+    if (formData.location && formData.location.trim()) fd.append('location', formData.location.trim())
+    if (formData.address && formData.address.trim()) fd.append('address', formData.address)
+    if (formData.established && String(formData.established).trim()) fd.append('established', String(formData.established).trim())
+    if (formData.doctorsCount !== '' && formData.doctorsCount !== null && formData.doctorsCount !== undefined) fd.append('doctorsCount', String(Number(formData.doctorsCount)))
+    // Handle rating object
+    if (formData.rating && typeof formData.rating === 'object') {
+      fd.append('rating', JSON.stringify(formData.rating))
+    } else {
+      // Fallback to individual fields for backward compatibility
+      if (formData.userScore !== '' && formData.userScore !== null && formData.userScore !== undefined) fd.append('userScore', String(Number(formData.userScore)))
+      if (formData.googleRating !== '' && formData.googleRating !== null && formData.googleRating !== undefined) fd.append('googleRating', String(Number(formData.googleRating)))
+    }
+    if (formData.image && typeof formData.image !== 'string') fd.append('image', formData.image)
+    
+    // Handle gallery - send both existing URLs and new files
+    if (Array.isArray(formData.gallery)) {
+      formData.gallery.forEach((g) => {
+        if (g && typeof g !== 'string') {
+          // New file upload
+          fd.append('gallery', g)
+        }
       })
-      return
+      // Send the complete gallery array (including existing URLs) as JSON
+      fd.append('gallery', JSON.stringify(formData.gallery))
+    }
+    if (Array.isArray(formData.accreditation)) {
+      fd.append('accreditation', JSON.stringify(formData.accreditation))
+    }
+    if (formData.contact && typeof formData.contact === 'object') {
+      fd.append('contact', JSON.stringify(formData.contact))
+    }
+    if (formData.operatingHours && typeof formData.operatingHours === 'object') {
+      fd.append('operatingHours', JSON.stringify(formData.operatingHours))
+    }
+    if (Array.isArray(formData.specialties)) {
+      const cleanSpecialties = formData.specialties.map((s) => ({
+        name: s?.name ?? '',
+        rating: s?.rating ?? '',
+        doctorsCount: s?.doctorsCount ?? '',
+        description: s?.description ?? '',
+        keyServices: processKeyServices(s?.keyServices)
+      }))
+      fd.append('specialties', JSON.stringify(cleanSpecialties))
+    }
+    if (Array.isArray(formData.features)) {
+      const cleanFeatures = formData.features.map((f) => ({
+        name: f?.name ?? '',
+        description: f?.description ?? ''
+      }))
+      fd.append('features', JSON.stringify(cleanFeatures))
+    }
+    
+    // Handle additional Hospital model fields
+    if (formData.overview && typeof formData.overview === 'object') {
+      fd.append('overview', JSON.stringify(formData.overview))
+    }
+    
+    if (formData.about && typeof formData.about === 'object') {
+      fd.append('about', JSON.stringify(formData.about))
+    }
+    
+    if (Array.isArray(formData.hospitalFeatures)) {
+      const cleanHospitalFeatures = formData.hospitalFeatures.map((f) => ({
+        name: f?.name ?? '',
+        description: f?.description ?? ''
+      }))
+      fd.append('hospitalFeatures', JSON.stringify(cleanHospitalFeatures))
+    }
+    
+    if (Array.isArray(formData.advancedMedicalEquipment)) {
+      const cleanEquipment = formData.advancedMedicalEquipment.map((e) => ({
+        name: e?.name ?? '',
+        description: e?.description ?? ''
+      }))
+      fd.append('advancedMedicalEquipment', JSON.stringify(cleanEquipment))
+    }
+    
+    if (Array.isArray(formData.nearbyLandmarks)) {
+      const cleanLandmarks = formData.nearbyLandmarks.map((l) => ({
+        type: l?.type ?? '',
+        direction: l?.direction ?? ''
+      }))
+      fd.append('nearbyLandmarks', JSON.stringify(cleanLandmarks))
+    }
+    
+    if (Array.isArray(formData.additionalServices)) {
+      const cleanServices = formData.additionalServices.map((s) => ({
+        name: s?.name ?? '',
+        description: s?.description ?? '',
+        category: s?.category ?? '',
+        available: s?.available ?? true,
+        cost: s?.cost ?? ''
+      }))
+      fd.append('additionalServices', JSON.stringify(cleanServices))
+    }
+    
+    if (formData.howToReach && formData.howToReach.trim()) {
+      fd.append('howToReach', formData.howToReach.trim())
     }
 
-    setSubmitting(true)
     try {
-      const fd = new FormData()
-      fd.append('id', (formData.id || '').toUpperCase())
-      fd.append('name', formData.name || '')
-      fd.append('location', formData.location || '')
-      fd.append('address', formData.contact?.address || '')
-      fd.append('established', formData.overview?.founded || '')
-      if (formData.rating?.userScore !== '') fd.append('userScore', String(Number(formData.rating.userScore)))
-      if (formData.rating?.googleRating !== '') fd.append('googleRating', String(Number(formData.rating.googleRating)))
-      fd.append('doctorsCount', String(Number(formData.overview?.doctors || 0)))
-      fd.append('image', formData.image)
-      ;(formData.gallery || []).filter(Boolean).forEach((file) => {
-        fd.append('gallery', file)
-      })
-      fd.append('accreditation', JSON.stringify(formData.accreditation || []))
-      fd.append('contact', JSON.stringify(formData.contact || {}))
-      fd.append('operatingHours', JSON.stringify(formData.operatingHours || {}))
-      fd.append('specialties', JSON.stringify((formData.specialties || []).map(s => ({
-        name: s.name || '',
-        rating: s.rating ? Number(s.rating) : undefined,
-        doctorsCount: s.doctorsCount ? Number(s.doctorsCount) : undefined,
-        description: s.description || '',
-        keyServices: processKeyServices(s.keyServices),
-        icon: s.icon || ''
-      }))))
-      fd.append('features', JSON.stringify(formData.hospitalFeatures || []))
-      fd.append('advancedMedicalEquipment', JSON.stringify(formData.advancedMedicalEquipment || []))
-      fd.append('about', JSON.stringify(formData.about || {}))
-      fd.append('overview', JSON.stringify(formData.overview || {}))
-      fd.append('howToReach', formData.howToReach || '')
-
-      await HospitalApi.create(fd)
-
-      await Swal.fire({
-        title: 'Success!',
-        text: 'Hospital created successfully!',
-        icon: 'success',
-        confirmButtonText: 'OK'
-      })
-      
-      // Redirect to hospitals list page
-      router.push('/hospital')
-    } catch (err) {
-      console.error(err)
+      const json = await HospitalApi.update(id, fd)
+      if (!json?.success) {
+        await Swal.fire({
+          title: 'Error!',
+          text: json?.message || 'Update failed',
+          icon: 'error',
+          confirmButtonText: 'OK'
+        })
+      } else {
+        await Swal.fire({
+          title: 'Success!',
+          text: 'Hospital updated successfully!',
+          icon: 'success',
+          confirmButtonText: 'OK'
+        })
+        
+        // Redirect to hospitals list page
+        router.push('/hospital')
+      }
+    } catch (e) {
+      const message = e?.response?.data?.message || e?.message || 'Update failed'
       await Swal.fire({
         title: 'Error!',
-        text: err?.message || 'Failed to create hospital',
+        text: message,
         icon: 'error',
         confirmButtonText: 'OK'
       })
-    } finally {
-      setSubmitting(false)
+      if (e?.response?.status === 401) {
+        localStorage.removeItem('adminToken')
+        router.push('/login')
+      }
     }
   }
+
+  if (loading) return (
+    <Layout>
+      <p className="text-gray-600">Loading...</p>
+    </Layout>
+  )
+  if (error) return (
+    <Layout>
+      <p className="text-red-600">{error}</p>
+    </Layout>
+  )
+  if (!formData) return null
 
   const tabs = [
     { id: 'hospital-details', label: 'Hospital Details', icon: Briefcase },
@@ -266,16 +364,15 @@ export default function AddHospital() {
   return (
     <Layout>
       <div className="space-y-6">
-        {/* Tabs */}
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8">
             {tabs.map((tab) => {
               const Icon = tab.icon
               return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`
                     flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200
                     ${activeTab === tab.id
                       ? 'border-blue-500 text-blue-600'
@@ -285,26 +382,16 @@ export default function AddHospital() {
                 >
                   <Icon className="h-4 w-4" />
                   <span>{tab.label}</span>
-                </button>
+              </button>
               )
             })}
           </nav>
         </div>
 
-        {/* Tab Content (keep both mounted so inputs persist) */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className={activeTab === 'hospital-details' ? 'block' : 'hidden'}>
             <div className="space-y-6">
               <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
-                {/* Page Header */}
-                <div className="bg-white rounded-lg border border-gray-200 p-6">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <Building2 className="w-6 h-6 text-gray-600" />
-                    <h2 className="text-xl font-semibold text-gray-900">Hospital Information</h2>
-                  </div>
-                  <p className="text-gray-600">Complete the basic details about your hospital</p>
-                </div>
-
                 {/* Basic Information */}
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Basic Information</h3>
@@ -314,7 +401,7 @@ export default function AddHospital() {
                       <input 
                         type="text" 
                         placeholder="e.g., APOLLO_001" 
-                        value={formData.id}
+                        value={formData?.id || ''}
                         onChange={(e) => setFormData(prev => ({ ...prev, id: e.target.value }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
                         required
@@ -325,7 +412,7 @@ export default function AddHospital() {
                       <input 
                         type="text" 
                         placeholder="e.g., Apollo Hospital" 
-                        value={formData.name}
+                        value={formData?.name || ''}
                         onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
                         required
@@ -336,7 +423,7 @@ export default function AddHospital() {
                       <input 
                         type="text" 
                         placeholder="e.g., Chennai, Tamil Nadu" 
-                        value={formData.location}
+                        value={formData?.location || ''}
                         onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
                         required
@@ -347,7 +434,7 @@ export default function AddHospital() {
                       <input 
                         type="text" 
                         placeholder="e.g., 1983" 
-                        value={formData.overview?.founded || ''}
+                        value={formData?.overview?.founded || ''}
                         onChange={(e) => setFormData(prev => ({ 
                           ...prev, 
                           overview: { ...prev.overview, founded: e.target.value }
@@ -360,7 +447,7 @@ export default function AddHospital() {
                       <input 
                         type="text" 
                         placeholder="e.g., 50,000+ patients annually" 
-                        value={formData.overview?.patients || ''}
+                        value={formData?.overview?.patients || ''}
                         onChange={(e) => setFormData(prev => ({ 
                           ...prev, 
                           overview: { ...prev.overview, patients: e.target.value }
@@ -379,7 +466,7 @@ export default function AddHospital() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">Clinic Type</label>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                         {['Multi-Specialty', 'Super Specialty', 'General', 'Specialty', 'Chain', 'Standalone'].map((type) => {
-                          const selected = (formData.overview?.clinicType || []).includes(type)
+                          const selected = (formData?.overview?.clinicType || []).includes(type)
                           return (
                             <button
                               type="button"
@@ -410,7 +497,7 @@ export default function AddHospital() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">Type of Care</label>
                       <div className="grid grid-cols-2 gap-2">
                         {['Emergency', 'Outpatient', 'Inpatient', 'Both'].map((type) => {
-                          const selected = (formData.overview?.typeOfCare || []).includes(type)
+                          const selected = (formData?.overview?.typeOfCare || []).includes(type)
                           return (
                             <button
                               type="button"
@@ -441,7 +528,7 @@ export default function AddHospital() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">Age Groups Served</label>
                       <div className="grid grid-cols-2 gap-2">
                         {['Pediatric', 'Adult', 'Geriatric', 'All Ages'].map((age) => {
-                          const selected = (formData.overview?.ageGroup || []).includes(age)
+                          const selected = (formData?.overview?.ageGroup || []).includes(age)
                           return (
                             <button
                               type="button"
@@ -482,7 +569,7 @@ export default function AddHospital() {
                         min="0"
                         max="10"
                         placeholder="9.7" 
-                        value={formData.rating?.userScore || ''}
+                        value={formData?.rating?.userScore || ''}
                         onChange={(e) => setFormData(prev => ({ 
                           ...prev, 
                           rating: { ...prev.rating, userScore: e.target.value }
@@ -498,7 +585,7 @@ export default function AddHospital() {
                         min="0"
                         max="5"
                         placeholder="4.7" 
-                        value={formData.rating?.googleRating || ''}
+                        value={formData?.rating?.googleRating || ''}
                         onChange={(e) => setFormData(prev => ({ 
                           ...prev, 
                           rating: { ...prev.rating, googleRating: e.target.value }
@@ -518,7 +605,7 @@ export default function AddHospital() {
                       <input 
                         type="number" 
                         placeholder="600" 
-                        value={formData.overview?.doctors || ''}
+                        value={formData?.overview?.doctors || ''}
                         onChange={(e) => setFormData(prev => ({ 
                           ...prev, 
                           overview: { ...prev.overview, doctors: e.target.value }
@@ -531,7 +618,7 @@ export default function AddHospital() {
                       <input 
                         type="number" 
                         placeholder="20" 
-                        value={formData.overview?.sizeAndCapacity?.ot || ''}
+                        value={formData?.overview?.sizeAndCapacity?.ot || ''}
                         onChange={(e) => setFormData(prev => ({ 
                           ...prev, 
                           overview: { 
@@ -547,7 +634,7 @@ export default function AddHospital() {
                       <input 
                         type="number" 
                         placeholder="50" 
-                        value={formData.overview?.sizeAndCapacity?.icu || ''}
+                        value={formData?.overview?.sizeAndCapacity?.icu || ''}
                         onChange={(e) => setFormData(prev => ({ 
                           ...prev, 
                           overview: { 
@@ -563,7 +650,7 @@ export default function AddHospital() {
                       <input 
                         type="number" 
                         placeholder="600" 
-                        value={formData.overview?.sizeAndCapacity?.patientBeds || ''}
+                        value={formData?.overview?.sizeAndCapacity?.patientBeds || ''}
                         onChange={(e) => setFormData(prev => ({ 
                           ...prev, 
                           overview: { 
@@ -586,7 +673,7 @@ export default function AddHospital() {
                       <textarea 
                         rows="4"
                         placeholder="Provide a comprehensive description of your hospital..." 
-                        value={formData.about?.description || ''}
+                        value={formData?.about?.description || ''}
                         onChange={(e) => setFormData(prev => ({ 
                           ...prev, 
                           about: { ...prev.about, description: e.target.value }
@@ -600,7 +687,7 @@ export default function AddHospital() {
                         <textarea 
                           rows="3"
                           placeholder="Enter your hospital's vision statement..." 
-                          value={formData.about?.vision || ''}
+                          value={formData?.about?.vision || ''}
                           onChange={(e) => setFormData(prev => ({ 
                             ...prev, 
                             about: { ...prev.about, vision: e.target.value }
@@ -613,7 +700,7 @@ export default function AddHospital() {
                         <textarea 
                           rows="3"
                           placeholder="Enter your hospital's mission statement..." 
-                          value={formData.about?.mission || ''}
+                          value={formData?.about?.mission || ''}
                           onChange={(e) => setFormData(prev => ({ 
                             ...prev, 
                             about: { ...prev.about, mission: e.target.value }
@@ -630,7 +717,7 @@ export default function AddHospital() {
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Accreditation & Certifications</h3>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
                     {['JCI','NABH','NABL','ISO','CAP'].map((acc) => {
-                      const selected = (formData.accreditation || []).includes(acc)
+                      const selected = (formData?.accreditation || []).includes(acc)
                       return (
                         <button
                           type="button"
@@ -663,7 +750,7 @@ export default function AddHospital() {
                       <input 
                         type="email" 
                         placeholder="info@hospital.com" 
-                        value={formData.contact?.email || ''}
+                        value={formData?.contact?.email || ''}
                         onChange={(e) => setFormData(prev => ({ ...prev, contact: { ...prev.contact, email: e.target.value } }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
                       />
@@ -673,7 +760,7 @@ export default function AddHospital() {
                       <input 
                         type="text" 
                         placeholder="+91-44-2829-3333" 
-                        value={formData.contact?.phone || ''}
+                        value={formData?.contact?.phone || ''}
                         onChange={(e) => setFormData(prev => ({ ...prev, contact: { ...prev.contact, phone: e.target.value } }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
                       />
@@ -683,7 +770,7 @@ export default function AddHospital() {
                       <input 
                         type="text" 
                         placeholder="https://www.hospital.com" 
-                        value={formData.contact?.website || ''}
+                        value={formData?.contact?.website || ''}
                         onChange={(e) => setFormData(prev => ({ ...prev, contact: { ...prev.contact, website: e.target.value } }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
                       />
@@ -693,7 +780,7 @@ export default function AddHospital() {
                       <input 
                         type="text" 
                         placeholder="+91-44-2829-3333" 
-                        value={formData.contact?.emergency || ''}
+                        value={formData?.contact?.emergency || ''}
                         onChange={(e) => setFormData(prev => ({ ...prev, contact: { ...prev.contact, emergency: e.target.value } }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
                       />
@@ -703,7 +790,7 @@ export default function AddHospital() {
                       <textarea 
                         rows="3"
                         placeholder="Enter complete hospital address..." 
-                        value={formData.contact?.address || ''}
+                        value={formData?.contact?.address || ''}
                         onChange={(e) => setFormData(prev => ({ 
                           ...prev, 
                           contact: { ...prev.contact, address: e.target.value }
@@ -722,13 +809,22 @@ export default function AddHospital() {
                     <textarea 
                       rows="4"
                       placeholder="Provide detailed directions, nearby landmarks, parking information..." 
-                      value={formData.howToReach || ''}
+                      value={formData?.howToReach || ''}
                       onChange={(e) => setFormData(prev => ({ ...prev, howToReach: e.target.value }))}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 resize-none"
                     />
                   </div>
                 </div>
               </form>
+              <div className="flex justify-end items-center pt-4">
+                <button
+                  type="button"
+                  onClick={goNext}
+                  className="px-8 py-3 rounded-lg transition-colors font-medium text-white bg-blue-600 hover:bg-blue-700"
+                >
+                  Next
+                </button>
+              </div>
             </div>
           </div>
           <div className={activeTab === 'profile-bio' ? 'block' : 'hidden'}>
@@ -742,7 +838,7 @@ export default function AddHospital() {
                   <div className="flex items-center space-x-2">
                     <Stethoscope className="w-5 h-5 text-gray-600" />
                     <h3 className="text-lg font-medium text-gray-900">Medical Specialties</h3>
-                    <span className="text-sm text-gray-500">({formData.specialties.length})</span>
+                    <span className="text-sm text-gray-500">({(formData?.specialties || []).length})</span>
                   </div>
                   {expandedSections.specialties ? (
                     <ChevronUp className="w-5 h-5 text-gray-400" />
@@ -754,7 +850,7 @@ export default function AddHospital() {
                 {expandedSections.specialties && (
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      {formData.specialties.map((sp, idx) => (
+                      {(formData?.specialties || []).map((sp, idx) => (
                         <div key={idx} className="border border-gray-200 rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
                           <div className="flex items-center justify-between mb-3">
                             <h4 className="text-sm font-medium text-gray-700">Specialty #{idx + 1}</h4>
@@ -773,7 +869,7 @@ export default function AddHospital() {
                               <input 
                                 type="text" 
                                 placeholder="e.g., Cardiology" 
-                                value={sp.name} 
+                                value={sp.name || ''} 
                                 onChange={(e) => updateSpecialty(idx, 'name', e.target.value)} 
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 text-sm" 
                               />
@@ -788,7 +884,7 @@ export default function AddHospital() {
                                   max="5" 
                                   step="0.1" 
                                   placeholder="4.5" 
-                                  value={sp.rating} 
+                                  value={sp.rating || ''} 
                                   onChange={(e) => updateSpecialty(idx, 'rating', e.target.value)} 
                                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 text-sm" 
                                 />
@@ -800,7 +896,7 @@ export default function AddHospital() {
                                   type="number" 
                                   min="0" 
                                   placeholder="25" 
-                                  value={sp.doctorsCount} 
+                                  value={sp.doctorsCount || ''} 
                                   onChange={(e) => updateSpecialty(idx, 'doctorsCount', e.target.value)} 
                                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 text-sm" 
                                 />
@@ -811,7 +907,7 @@ export default function AddHospital() {
                               <label className="block text-xs font-medium text-gray-600">Description</label>
                               <textarea 
                                 placeholder="Brief description of the specialty..." 
-                                value={sp.description} 
+                                value={sp.description || ''} 
                                 onChange={(e) => updateSpecialty(idx, 'description', e.target.value)} 
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 text-sm resize-none" 
                                 rows="2"
@@ -833,7 +929,7 @@ export default function AddHospital() {
                       ))}
                     </div>
                     
-                    {formData.specialties.length === 0 && (
+                    {(formData?.specialties || []).length === 0 && (
                       <div className="text-center py-8 text-gray-500">
                         <Stethoscope className="w-12 h-12 text-gray-300 mx-auto mb-2" />
                         <p className="text-sm">No specialties added yet</p>
@@ -863,7 +959,7 @@ export default function AddHospital() {
                   <div className="flex items-center space-x-2">
                     <Building2 className="w-5 h-5 text-gray-600" />
                     <h3 className="text-lg font-medium text-gray-900">Hospital Features & Facilities</h3>
-                    <span className="text-sm text-gray-500">({(formData.hospitalFeatures || []).length})</span>
+                    <span className="text-sm text-gray-500">({(formData?.hospitalFeatures || []).length})</span>
                   </div>
                   {expandedSections.features ? (
                     <ChevronUp className="w-5 h-5 text-gray-400" />
@@ -875,7 +971,7 @@ export default function AddHospital() {
                 {expandedSections.features && (
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      {(formData.hospitalFeatures || []).map((ft, idx) => (
+                      {(formData?.hospitalFeatures || []).map((ft, idx) => (
                         <div key={idx} className="border border-gray-200 rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
                           <div className="flex items-center justify-between mb-3">
                             <h4 className="text-sm font-medium text-gray-700">Feature #{idx + 1}</h4>
@@ -894,7 +990,7 @@ export default function AddHospital() {
                               <input 
                                 type="text" 
                                 placeholder="e.g., 24/7 Emergency Services" 
-                                value={ft.name} 
+                                value={ft.name || ''} 
                                 onChange={(e) => updateHospitalFeature(idx, 'name', e.target.value)} 
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 text-sm" 
                               />
@@ -904,7 +1000,7 @@ export default function AddHospital() {
                               <label className="block text-xs font-medium text-gray-600">Description</label>
                               <textarea 
                                 placeholder="Describe this feature..." 
-                                value={ft.description} 
+                                value={ft.description || ''} 
                                 onChange={(e) => updateHospitalFeature(idx, 'description', e.target.value)} 
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 text-sm resize-none" 
                                 rows="2"
@@ -915,7 +1011,7 @@ export default function AddHospital() {
                       ))}
                     </div>
                     
-                    {(formData.hospitalFeatures || []).length === 0 && (
+                    {(formData?.hospitalFeatures || []).length === 0 && (
                       <div className="text-center py-8 text-gray-500">
                         <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-2" />
                         <p className="text-sm">No hospital features added yet</p>
@@ -945,7 +1041,7 @@ export default function AddHospital() {
                   <div className="flex items-center space-x-2">
                     <Microscope className="w-5 h-5 text-gray-600" />
                     <h3 className="text-lg font-medium text-gray-900">Advanced Medical Equipment</h3>
-                    <span className="text-sm text-gray-500">({(formData.advancedMedicalEquipment || []).length})</span>
+                    <span className="text-sm text-gray-500">({(formData?.advancedMedicalEquipment || []).length})</span>
                   </div>
                   {expandedSections.equipment ? (
                     <ChevronUp className="w-5 h-5 text-gray-400" />
@@ -957,7 +1053,7 @@ export default function AddHospital() {
                 {expandedSections.equipment && (
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      {(formData.advancedMedicalEquipment || []).map((eq, idx) => (
+                      {(formData?.advancedMedicalEquipment || []).map((eq, idx) => (
                         <div key={idx} className="border border-gray-200 rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
                           <div className="flex items-center justify-between mb-3">
                             <h4 className="text-sm font-medium text-gray-700">Equipment #{idx + 1}</h4>
@@ -976,7 +1072,7 @@ export default function AddHospital() {
                               <input 
                                 type="text" 
                                 placeholder="e.g., MRI Scanner" 
-                                value={eq.name} 
+                                value={eq.name || ''} 
                                 onChange={(e) => updateAdvancedEquipment(idx, 'name', e.target.value)} 
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 text-sm" 
                               />
@@ -986,7 +1082,7 @@ export default function AddHospital() {
                               <label className="block text-xs font-medium text-gray-600">Description</label>
                               <textarea 
                                 placeholder="Describe this equipment..." 
-                                value={eq.description} 
+                                value={eq.description || ''} 
                                 onChange={(e) => updateAdvancedEquipment(idx, 'description', e.target.value)} 
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 text-sm resize-none" 
                                 rows="2"
@@ -997,7 +1093,7 @@ export default function AddHospital() {
                       ))}
                     </div>
                     
-                    {(formData.advancedMedicalEquipment || []).length === 0 && (
+                    {(formData?.advancedMedicalEquipment || []).length === 0 && (
                       <div className="text-center py-8 text-gray-500">
                         <Microscope className="w-12 h-12 text-gray-300 mx-auto mb-2" />
                         <p className="text-sm">No medical equipment added yet</p>
@@ -1027,7 +1123,7 @@ export default function AddHospital() {
                   <div className="flex items-center space-x-2">
                     <Camera className="w-5 h-5 text-gray-600" />
                     <h3 className="text-lg font-medium text-gray-900">Hospital Gallery</h3>
-                    <span className="text-sm text-gray-500">({formData.gallery.length})</span>
+                    <span className="text-sm text-gray-500">({(formData?.gallery || []).length})</span>
                   </div>
                   {expandedSections.gallery ? (
                     <ChevronUp className="w-5 h-5 text-gray-400" />
@@ -1039,7 +1135,7 @@ export default function AddHospital() {
                 {expandedSections.gallery && (
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      {formData.gallery.map((item, idx) => (
+                      {(formData?.gallery || []).map((item, idx) => (
                         <div key={idx} className="border border-gray-200 rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
                           <div className="flex items-center justify-between mb-3">
                             <h4 className="text-sm font-medium text-gray-700">Gallery Image #{idx + 1}</h4>
@@ -1103,7 +1199,7 @@ export default function AddHospital() {
                       ))}
                     </div>
                     
-                    {formData.gallery.length === 0 && (
+                    {(formData?.gallery || []).length === 0 && (
                       <div className="text-center py-8 text-gray-500">
                         <Camera className="w-12 h-12 text-gray-300 mx-auto mb-2" />
                         <p className="text-sm">No gallery images added yet</p>
@@ -1124,43 +1220,28 @@ export default function AddHospital() {
                 )}
               </div>
             </div>
+            <div className="flex justify-between items-center pt-4">
+              <button
+                type="button"
+                onClick={goBack}
+                className="px-6 py-3 rounded-lg border text-sm font-medium transition-colors border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                Back
+              </button>
+              <button 
+                type="button" 
+                onClick={submitUpdate} 
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Save Changes
+              </button>
+            </div>
           </div>
-        </div>
-
-        {/* Step Controls */}
-        <div className="flex justify-between items-center pt-4">
-          <button
-            type="button"
-            onClick={goBack}
-            className={`px-6 py-3 rounded-lg border text-sm font-medium transition-colors ${
-              activeTab === 'profile-bio'
-                ? 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                : 'border-gray-200 text-gray-400 cursor-not-allowed'
-            }`}
-            disabled={activeTab !== 'profile-bio'}
-          >
-            Back
-          </button>
-          {activeTab === 'hospital-details' ? (
-            <button
-              type="button"
-              onClick={goNext}
-              className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-            >
-              Next
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={submitHospital}
-              className={`px-8 py-3 rounded-lg transition-colors font-medium text-white ${submitting ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
-              disabled={submitting}
-            >
-              {submitting ? 'Creating...' : 'Create Hospital Profile'}
-            </button>
-          )}
         </div>
       </div>
     </Layout>
   )
-} 
+}
+
+
+

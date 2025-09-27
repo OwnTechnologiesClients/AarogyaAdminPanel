@@ -1,19 +1,24 @@
 "use client"
 
-import { useState, useEffect } from 'react'
-import { Layout } from "@/components/layout"
-import api from '@/lib/api'
+import { useEffect, useState, use } from 'react'
+import DoctorApi from '@/lib/api/doctorApi'
 import { HospitalApi } from '@/lib/api/hospitalApi'
+import { Layout } from '@/components/layout'
 import Swal from 'sweetalert2'
 import { Briefcase, User, Building2, Star, Users, Bed, Calendar, Mail, Phone, Globe, MapPin, Award, Info, Navigation, Plus, Trash2, Stethoscope, Microscope, Camera, ChevronDown, ChevronUp } from "lucide-react"
 import { useRouter } from 'next/navigation'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 
-
-export default function AddDoctor() {
+export default function EditDoctor({ params }) {
   const router = useRouter()
+  const resolvedParams = use(params)
+  const { id } = resolvedParams
   const [activeTab, setActiveTab] = useState('doctor-details')
+  const [formData, setFormData] = useState(null)
+  const [hospitals, setHospitals] = useState([])
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState("")
   const [expandedSections, setExpandedSections] = useState({
     specializations: true,
     degrees: true,
@@ -21,29 +26,12 @@ export default function AddDoctor() {
     awards: true
   })
 
-  const [formData, setFormData] = useState({
-    id: '',
-    name: '',
-    image: null,
-    specialty: '',
-    location: '',
-    experience: '',
-    rating: '',
-    introduction: '',
-    hospitalId: '',
-    designation: '',
-    degrees: [],
-    affiliatedHospitalIds: [],
-    specializations: [],
-    languages: [],
-    awards: [],
-    researchWork: '',
-    publications: [],
-    certifications: []
-  })
-
-  const [hospitals, setHospitals] = useState([])
-  const [submitting, setSubmitting] = useState(false)
+  useEffect(() => {
+    HospitalApi.list().then(res => {
+      const data = Array.isArray(res.data) ? res.data : res.data?.data || []
+      setHospitals(data)
+    }).catch(() => setHospitals([]))
+  }, [])
 
   // Helper functions for form management
   const toggleSection = (section) => {
@@ -53,81 +41,90 @@ export default function AddDoctor() {
     }))
   }
 
-  useEffect(() => {
-    HospitalApi.list()
-      .then(res => {
-        const data = Array.isArray(res.data) ? res.data : res.data?.data || []
-        setHospitals(data)
-      })
-      .catch(() => setHospitals([]))
-  }, [])
-
   const handleAdd = (input, setInput, list, setList) => {
     if (input.trim() && !list.includes(input.trim())) {
       setList([...list, input.trim()])
       setInput('')
     }
   }
+  
   const handleRemove = (item, list, setList) => {
     setList(list.filter(i => i !== item))
   }
 
-  const submitDoctor = async () => {
-    if (submitting) return
-    // Basic validation
-    if (!formData.id || !formData.name || !formData.specialty || !formData.location) {
-      alert('Please fill required fields: ID, Name, Specialty, Location')
-      return
-    }
-    if (!formData.image) {
-      alert('Please upload the doctor profile image')
-      return
-    }
+  useEffect(() => {
+    DoctorApi.getById(id)
+      .then(res => {
+        const data = res.data || res
+        setFormData({
+          id: data.id || '',
+          name: data.name || '',
+          image: data.image || null,
+          specialty: data.specialty || '',
+          location: data.location || '',
+          experience: data.experience || '',
+          rating: data.rating || '',
+          introduction: data.introduction || '',
+          designation: data.designation || '',
+          hospitalId: data.hospitalId?.id || data.hospitalId || '',
+          affiliatedHospitalIds: (data.affiliatedHospitalIds || []).map(h => h.name || h.id || h),
+          specializations: data.specializations || [],
+          degrees: data.degrees || [],
+          languages: data.languages || [],
+          awards: data.awards || [],
+          researchWork: data.researchWork || '',
+          publications: data.publications || [],
+          certifications: data.certifications || []
+        })
+      })
+      .catch(err => setError(err?.message || 'Failed to load doctor'))
+  }, [id])
 
-    setSubmitting(true)
+  const submitUpdate = async () => {
+    if (!formData) return
+    setSaving(true)
     try {
       const fd = new FormData()
-      fd.append('id', (formData.id || '').toUpperCase())
+      fd.append('id', formData.id || '')
       fd.append('name', formData.name || '')
       fd.append('specialty', formData.specialty || '')
       fd.append('location', formData.location || '')
       fd.append('experience', formData.experience || '')
       fd.append('rating', formData.rating || '')
       fd.append('introduction', formData.introduction || '')
-      fd.append('hospitalId', formData.hospitalId || '')
       fd.append('designation', formData.designation || '')
+      fd.append('hospitalId', formData.hospitalId || '')
       fd.append('affiliatedHospitalIds', JSON.stringify(formData.affiliatedHospitalIds || []))
       fd.append('specializations', JSON.stringify(formData.specializations || []))
-      fd.append('workExperience', JSON.stringify(formData.workExperience || []))
+      fd.append('degrees', JSON.stringify(formData.degrees || []))
       fd.append('languages', JSON.stringify(formData.languages || []))
       fd.append('awards', JSON.stringify(formData.awards || []))
       fd.append('researchWork', formData.researchWork || '')
       fd.append('publications', JSON.stringify(formData.publications || []))
       fd.append('certifications', JSON.stringify(formData.certifications || []))
-      fd.append('image', formData.image)
-
-      await api.post('/doctors/create', fd, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
+      if (formData.image && typeof formData.image !== 'string') {
+        fd.append('image', formData.image)
+      }
+      await DoctorApi.update(id, fd)
       
       await Swal.fire({
         title: 'Success!',
-        text: 'Doctor profile created successfully!',
+        text: 'Doctor updated successfully!',
         icon: 'success',
         confirmButtonText: 'OK'
       })
       
       // Redirect to doctors list page
       router.push('/doctors')
-    } catch (err) {
+    } catch (e) {
       await Swal.fire({
         title: 'Error!',
-        text: err.response?.data?.message || 'Failed to create doctor profile',
+        text: e?.response?.data?.message || 'Failed to update doctor',
         icon: 'error',
         confirmButtonText: 'OK'
       })
     } finally {
-      setSubmitting(false)
+      setSaving(false)
     }
   }
 
@@ -139,16 +136,18 @@ export default function AddDoctor() {
   const goNext = () => setActiveTab('profile-bio')
   const goBack = () => setActiveTab('doctor-details')
 
+  if (error) return <Layout><p className="p-6 text-red-600">{error}</p></Layout>
+  if (!formData) return <Layout><p className="p-6">Loading...</p></Layout>
+
   return (
     <Layout>
       <div className="space-y-6">
-        {/* Tabs */}
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8">
             {tabs.map((tab) => {
               const Icon = tab.icon
               return (
-            <button
+                <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`
@@ -161,16 +160,15 @@ export default function AddDoctor() {
                 >
                   <Icon className="h-4 w-4" />
                   <span>{tab.label}</span>
-            </button>
+                </button>
               )
             })}
           </nav>
         </div>
 
-        {/* Tab Content (keep both mounted so inputs persist) */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className={activeTab === 'doctor-details' ? 'block' : 'hidden'}>
-            <DoctorDetailsTab 
+            <DoctorDetailsEditTab 
               formData={formData}
               setFormData={setFormData}
               hospitals={hospitals}
@@ -178,7 +176,7 @@ export default function AddDoctor() {
             />
           </div>
           <div className={activeTab === 'profile-bio' ? 'block' : 'hidden'}>
-            <ProfileBioTab
+            <ProfileBioEditTab
               formData={formData}
               setFormData={setFormData}
               expandedSections={expandedSections}
@@ -186,19 +184,19 @@ export default function AddDoctor() {
               handleAdd={handleAdd}
               handleRemove={handleRemove}
               goBack={goBack}
-              submitDoctor={submitDoctor}
-              submitting={submitting}
+              submitUpdate={submitUpdate}
+              saving={saving}
             />
           </div>
         </div>
       </div>
-      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
+      <ToastContainer position="top-right" autoClose={3000} />
     </Layout>
   )
-} 
+}
 
-// Doctor Details Tab Component
-const DoctorDetailsTab = ({ formData, setFormData, hospitals, goNext }) => {
+// Doctor Details Edit Tab Component
+const DoctorDetailsEditTab = ({ formData, setFormData, hospitals, goNext }) => {
   const [imagePreview, setImagePreview] = useState(null);
 
   const handleImageChange = (e) => {
@@ -214,6 +212,14 @@ const DoctorDetailsTab = ({ formData, setFormData, hospitals, goNext }) => {
     setImagePreview(null);
   };
 
+  const getCurrentImageSrc = () => {
+    if (imagePreview) return imagePreview;
+    if (formData.image && typeof formData.image === 'string') {
+      return formData.image.startsWith('http') ? formData.image : `http://localhost:5000${formData.image}`;
+    }
+    return null;
+  };
+
   return (
     <div className="space-y-6">
       <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
@@ -221,9 +227,9 @@ const DoctorDetailsTab = ({ formData, setFormData, hospitals, goNext }) => {
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="flex items-center space-x-3 mb-2">
             <Briefcase className="w-6 h-6 text-gray-600" />
-            <h2 className="text-xl font-semibold text-gray-900">Doctor Information</h2>
+            <h2 className="text-xl font-semibold text-gray-900">Edit Doctor Information</h2>
           </div>
-          <p className="text-gray-600">Complete the basic details about the doctor</p>
+          <p className="text-gray-600">Update the basic details about the doctor</p>
         </div>
 
         {/* Basic Information */}
@@ -264,6 +270,17 @@ const DoctorDetailsTab = ({ formData, setFormData, hospitals, goNext }) => {
               />
             </div>
             <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Designation *</label>
+              <input 
+                type="text" 
+                placeholder="e.g., Senior Consultant" 
+                value={formData.designation}
+                onChange={(e) => setFormData(prev => ({ ...prev, designation: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+                required
+              />
+            </div>
+            <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">Location *</label>
               <input 
                 type="text" 
@@ -297,8 +314,8 @@ const DoctorDetailsTab = ({ formData, setFormData, hospitals, goNext }) => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
               />
             </div>
-          </div>
-        </div>
+            </div>
+            </div>
 
         {/* Hospital Assignment */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -396,8 +413,8 @@ const DoctorDetailsTab = ({ formData, setFormData, hospitals, goNext }) => {
   );
 };
 
-// Profile & Bio Tab Component
-const ProfileBioTab = ({
+// Profile & Bio Edit Tab Component  
+const ProfileBioEditTab = ({
   formData,
   setFormData,
   expandedSections,
@@ -405,8 +422,8 @@ const ProfileBioTab = ({
   handleAdd,
   handleRemove,
   goBack,
-  submitDoctor,
-  submitting
+  submitUpdate,
+  saving
 }) => {
   const [specializationInput, setSpecializationInput] = useState('')
   const [languageInput, setLanguageInput] = useState('')
@@ -423,7 +440,7 @@ const ProfileBioTab = ({
     if (degreeNameInput && degreeInstitutionInput && degreeYearInput) {
       setFormData(prev => ({
         ...prev,
-        degrees: [...prev.degrees, { 
+        degrees: [...(prev.degrees || []), { 
           name: degreeNameInput, 
           institution: degreeInstitutionInput,
           year: degreeYearInput
@@ -438,40 +455,135 @@ const ProfileBioTab = ({
   const handleRemoveDegree = (index) => {
     setFormData(prev => ({
       ...prev,
-      degrees: prev.degrees.filter((_, idx) => idx !== index)
+      degrees: (prev.degrees || []).filter((_, idx) => idx !== index)
     }))
   }
 
-  const [imagePreview, setImagePreview] = useState(null);
+  const addSpecialization = () => {
+    if (specializationInput.trim() && !formData.specializations.includes(specializationInput.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        specializations: [...prev.specializations, specializationInput.trim()]
+      }))
+      setSpecializationInput('')
+    }
+  }
+
+  const addLanguage = () => {
+    if (languageInput.trim() && !formData.languages.includes(languageInput.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        languages: [...prev.languages, languageInput.trim()]
+      }))
+      setLanguageInput('')
+    }
+  }
+
+  const addAward = () => {
+    if (awardInput.trim() && !formData.awards.includes(awardInput.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        awards: [...prev.awards, awardInput.trim()]
+      }))
+      setAwardInput('')
+    }
+  }
+
+  const addPublication = () => {
+    if (publicationInput.trim() && !formData.publications.includes(publicationInput.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        publications: [...prev.publications, publicationInput.trim()]
+      }))
+      setPublicationInput('')
+    }
+  }
+
+  const addCertification = () => {
+    if (certificationInput.trim() && !formData.certifications.includes(certificationInput.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        certifications: [...prev.certifications, certificationInput.trim()]
+      }))
+      setCertificationInput('')
+    }
+  }
+
+  const handleRemoveSpecialization = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      specializations: prev.specializations.filter((_, idx) => idx !== index)
+    }))
+  }
+
+  const handleRemoveLanguage = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      languages: prev.languages.filter((_, idx) => idx !== index)
+    }))
+  }
+
+  const handleRemoveAward = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      awards: prev.awards.filter((_, idx) => idx !== index)
+    }))
+  }
+
+  const handleRemovePublication = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      publications: prev.publications.filter((_, idx) => idx !== index)
+    }))
+  }
+
+  const handleRemoveCertification = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      certifications: prev.certifications.filter((_, idx) => idx !== index)
+    }))
+  }
+
+  const getCurrentImageSrc = () => {
+    if (formData?.image) {
+      if (formData.image.startsWith('http')) {
+        return formData.image
+      }
+      return `http://localhost:5000${formData.image}`
+    }
+    return null
+  }
 
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0]
     if (file) {
-      setFormData(prev => ({ ...prev, image: file }));
-      setImagePreview(URL.createObjectURL(file));
+      setFormData(prev => ({ ...prev, image: file }))
     }
-  };
+  }
 
   const handleRemoveImage = () => {
-    setFormData(prev => ({ ...prev, image: null }));
-    setImagePreview(null);
-  };
+    setFormData(prev => ({ ...prev, image: null }))
+  }
+
+
+
+
 
   return (
     <div className="space-y-6">
       {/* Profile Image */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h3 className="text-lg font-medium text-gray-900 mb-4">Profile Image</h3>
-            <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Upload Profile Image *</label>
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700">Update Profile Image</label>
           <div className="flex items-center space-x-6">
-            {/* Current/Preview Image */}
+            {/* Current Image */}
             <div className="relative w-32 h-32 bg-gray-100 rounded-lg border border-gray-300 flex items-center justify-center overflow-hidden">
-              {imagePreview ? (
+              {getCurrentImageSrc() ? (
                 <div className="relative w-full h-full">
                   <img
-                    src={imagePreview}
-                    alt="Preview"
+                    src={getCurrentImageSrc()}
+                    alt="Current"
                     className="w-full h-full object-cover rounded-lg"
                   />
                   <button
@@ -492,27 +604,26 @@ const ProfileBioTab = ({
 
             {/* Upload Section */}
             <div className="w-32 h-32 bg-gray-100 rounded-lg border border-gray-300 flex items-center justify-center hover:bg-gray-200 transition-colors cursor-pointer"
-                 onClick={() => document.getElementById('image-upload-bio').click()}>
+                 onClick={() => document.getElementById('image-upload-edit-bio').click()}>
               <div className="text-center">
                 <p className="text-sm text-gray-600 font-medium">Upload new photo</p>
               </div>
             </div>
-              <input 
-              id="image-upload-bio"
+            <input
+              id="image-upload-edit-bio"
               type="file"
               accept="image/*"
               onChange={handleImageChange}
               className="hidden"
-              required
-              />
+            />
+          </div>
             </div>
           </div>
-        </div>
 
-      {/* Introduction */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Introduction</h3>
-            <div className="space-y-2">
+        {/* Introduction */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Introduction</h3>
+          <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">Doctor's Introduction & Bio</label>
           <textarea 
             rows="6"
@@ -521,23 +632,23 @@ const ProfileBioTab = ({
             onChange={(e) => setFormData(prev => ({ ...prev, introduction: e.target.value }))}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 resize-none"
           />
+          </div>
         </div>
-      </div>
 
-      {/* Research Work */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Research Work</h3>
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Research Background & Work</label>
-          <textarea 
-            rows="8"
-            placeholder="Enter doctor's research work, studies, and clinical research background..." 
-            value={formData.researchWork}
-            onChange={(e) => setFormData(prev => ({ ...prev, researchWork: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 resize-none"
-          />
+        {/* Research Work */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Research Work</h3>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">Research Background & Work</label>
+            <textarea 
+              rows="8"
+              placeholder="Enter doctor's research work, studies, and clinical research background..." 
+              value={formData.researchWork}
+              onChange={(e) => setFormData(prev => ({ ...prev, researchWork: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 resize-none"
+            />
+          </div>
         </div>
-      </div>
 
       {/* Specializations */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -597,10 +708,10 @@ const ProfileBioTab = ({
             </div>
           </div>
         )}
-        </div>
+      </div>
 
       {/* Degrees */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
         <div 
           className="flex items-center justify-between mb-4 cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors"
           onClick={() => toggleSection('degrees')}
@@ -608,7 +719,7 @@ const ProfileBioTab = ({
           <div className="flex items-center space-x-2">
             <Award className="w-5 h-5 text-gray-600" />
             <h3 className="text-lg font-medium text-gray-900">Educational Degrees</h3>
-            <span className="text-sm text-gray-500">({formData.degrees.length})</span>
+            <span className="text-sm text-gray-500">({formData.degrees?.length || 0})</span>
           </div>
           {expandedSections.degrees ? (
             <ChevronUp className="w-5 h-5 text-gray-400" />
@@ -616,31 +727,31 @@ const ProfileBioTab = ({
             <ChevronDown className="w-5 h-5 text-gray-400" />
           )}
         </div>
-
+        
         {expandedSections.degrees && (
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-            <input
-              type="text"
+              <input
+                type="text"
                 value={degreeNameInput}
                 onChange={(e) => setDegreeNameInput(e.target.value)}
                 placeholder="Degree Name (e.g., MBBS, MD)"
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-            />
-            <input
-              type="text"
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+              />
+              <input
+                type="text"
                 value={degreeInstitutionInput}
                 onChange={(e) => setDegreeInstitutionInput(e.target.value)}
                 placeholder="Institution (e.g., AIIMS Delhi)"
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-            />
-            <input
-              type="text"
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+              />
+              <input
+                type="text"
                 value={degreeYearInput}
                 onChange={(e) => setDegreeYearInput(e.target.value)}
                 placeholder="Year (e.g., 2015)"
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-            />
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+              />
               <button
                 type="button"
                 onClick={addDegree}
@@ -650,7 +761,7 @@ const ProfileBioTab = ({
               </button>
             </div>
             <div className="space-y-2">
-              {formData.degrees.map((degree, idx) => (
+              {formData.degrees?.map((degree, idx) => (
                 <div key={idx} className="bg-gray-50 p-3 rounded-md flex items-center justify-between">
                   <div className="flex-1">
                     <span className="font-medium text-gray-900">{degree.name}</span>
@@ -669,7 +780,7 @@ const ProfileBioTab = ({
             </div>
           </div>
         )}
-        </div>
+      </div>
 
       {/* Languages */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -692,8 +803,8 @@ const ProfileBioTab = ({
         {expandedSections.languages && (
           <div className="space-y-4">
             <div className="flex gap-2">
-              <input
-                type="text"
+              <input 
+                type="text" 
                 value={languageInput}
                 onChange={(e) => setLanguageInput(e.target.value)}
                 onKeyDown={(e) => { 
@@ -703,10 +814,10 @@ const ProfileBioTab = ({
                   }
                 }}
                 placeholder="Add language and press Enter" 
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500" 
               />
-              <button
-                type="button"
+              <button 
+                type="button" 
                 onClick={() => handleAdd(languageInput, setLanguageInput, formData.languages, (newList) => setFormData(prev => ({ ...prev, languages: newList })))}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
               >
@@ -724,14 +835,14 @@ const ProfileBioTab = ({
                   >
                     &times;
                   </button>
-              </span>
-            ))}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
         )}
       </div>
 
-        {/* Awards */}
+      {/* Awards */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <div 
           className="flex items-center justify-between mb-4 cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors"
@@ -741,19 +852,19 @@ const ProfileBioTab = ({
             <Award className="w-5 h-5 text-gray-600" />
             <h3 className="text-lg font-medium text-gray-900">Awards & Recognitions</h3>
             <span className="text-sm text-gray-500">({formData.awards.length})</span>
-            </div>
+          </div>
           {expandedSections.awards ? (
             <ChevronUp className="w-5 h-5 text-gray-400" />
           ) : (
             <ChevronDown className="w-5 h-5 text-gray-400" />
           )}
-      </div>
-
+        </div>
+        
         {expandedSections.awards && (
           <div className="space-y-4">
             <div className="flex gap-2">
-              <input
-                type="text"
+              <input 
+                type="text" 
                 value={awardInput}
                 onChange={(e) => setAwardInput(e.target.value)}
                 onKeyDown={(e) => { 
@@ -762,8 +873,8 @@ const ProfileBioTab = ({
                     handleAdd(awardInput, setAwardInput, formData.awards, (newList) => setFormData(prev => ({ ...prev, awards: newList })))
                   }
                 }}
-                placeholder="Add award and press Enter"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+                placeholder="Add award and press Enter" 
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500" 
               />
               <button 
                 type="button" 
@@ -789,7 +900,7 @@ const ProfileBioTab = ({
             </div>
           </div>
         )}
-        </div>
+      </div>
 
       {/* Step Controls (Profile tab) */}
       <div className="flex justify-between items-center pt-4">
@@ -800,15 +911,16 @@ const ProfileBioTab = ({
         >
           Back
         </button>
-        <button 
-          type="button" 
-          onClick={submitDoctor}
-          className={`px-8 py-3 rounded-lg transition-colors font-medium text-white ${submitting ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
-          disabled={submitting}
+        <button
+          type="button"
+          onClick={submitUpdate}
+          className={`px-8 py-3 rounded-lg transition-colors font-medium text-white ${saving ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
+          disabled={saving}
         >
-          {submitting ? 'Creating...' : 'Create Doctor Profile'}
+          {saving ? 'Saving...' : 'Save Changes'}
         </button>
       </div>
-    </div>
+      </div>
   )
 }
+
