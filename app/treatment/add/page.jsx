@@ -314,7 +314,7 @@ const TreatmentDetailsTab = ({ formData, setFormData, hospitals, doctors, goNext
                 onChange={(selected) => setFormData(prev => ({ ...prev, topHospitals: selected }))}
                 placeholder="Search and select hospitals..."
                 displayKey="name"
-                valueKey="id"
+                valueKey="_id"
               />
               <p className="text-xs text-gray-500">Search and select hospitals that offer this treatment</p>
                 </div>
@@ -326,7 +326,7 @@ const TreatmentDetailsTab = ({ formData, setFormData, hospitals, doctors, goNext
                 onChange={(selected) => setFormData(prev => ({ ...prev, topDoctors: selected }))}
                 placeholder="Search and select doctors..."
                 displayKey="name"
-                valueKey="id"
+                valueKey="_id"
                 subtitleKey="specialty"
               />
               <p className="text-xs text-gray-500">Search and select doctors who specialize in this treatment</p>

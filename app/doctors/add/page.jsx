@@ -314,7 +314,7 @@ const DoctorDetailsTab = ({ formData, setFormData, hospitals, goNext }) => {
               >
                 <option value="">Select Hospital</option>
                 {hospitals.map(h => (
-                  <option key={h.id} value={h.id}>{h.name}</option>
+                  <option key={h._id} value={h._id}>{h.name}</option>
                 ))}
               </select>
             </div>
@@ -731,7 +731,7 @@ const ProfileBioTab = ({
         )}
       </div>
 
-        {/* Awards */}
+      {/* Awards */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <div 
           className="flex items-center justify-between mb-4 cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors"
@@ -741,12 +741,139 @@ const ProfileBioTab = ({
             <Award className="w-5 h-5 text-gray-600" />
             <h3 className="text-lg font-medium text-gray-900">Awards & Recognitions</h3>
             <span className="text-sm text-gray-500">({formData.awards.length})</span>
-            </div>
+          </div>
           {expandedSections.awards ? (
             <ChevronUp className="w-5 h-5 text-gray-400" />
           ) : (
             <ChevronDown className="w-5 h-5 text-gray-400" />
           )}
+        </div>
+        {expandedSections.awards && (
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={awardInput}
+                onChange={(e) => setAwardInput(e.target.value)}
+                onKeyDown={(e) => { 
+                  if (e.key === 'Enter') { 
+                    e.preventDefault(); 
+                    handleAdd(awardInput, setAwardInput, formData.awards, (newList) => setFormData(prev => ({ ...prev, awards: newList })))
+                  }
+                }}
+                placeholder="Add award and press Enter"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+              />
+              <button 
+                type="button" 
+                onClick={() => handleAdd(awardInput, setAwardInput, formData.awards, (newList) => setFormData(prev => ({ ...prev, awards: newList })))}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Add
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {formData.awards.map((item, idx) => (
+                <span key={idx} className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full flex items-center gap-1">
+                  {item}
+                  <button 
+                    type="button" 
+                    onClick={() => handleRemove(item, formData.awards, (newList) => setFormData(prev => ({ ...prev, awards: newList })))} 
+                    className="ml-1 text-yellow-500 hover:text-red-500"
+                  >
+                    &times;
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Publications */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Publications</h3>
+        <div className="space-y-4">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={publicationInput}
+              onChange={(e) => setPublicationInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAdd(publicationInput, setPublicationInput, formData.publications, (newList) => setFormData(prev => ({ ...prev, publications: newList })))
+                }
+              }}
+              placeholder="Add publication and press Enter"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+            />
+            <button
+              type="button"
+              onClick={() => handleAdd(publicationInput, setPublicationInput, formData.publications, (newList) => setFormData(prev => ({ ...prev, publications: newList })))}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              Add
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {formData.publications.map((item, idx) => (
+              <span key={idx} className="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full flex items-center gap-1">
+                {item}
+                <button
+                  type="button"
+                  onClick={() => handleRemove(item, formData.publications, (newList) => setFormData(prev => ({ ...prev, publications: newList })))}
+                  className="ml-1 text-indigo-500 hover:text-red-500"
+                >
+                  &times;
+                </button>
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Certifications */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Certifications</h3>
+        <div className="space-y-4">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={certificationInput}
+              onChange={(e) => setCertificationInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAdd(certificationInput, setCertificationInput, formData.certifications, (newList) => setFormData(prev => ({ ...prev, certifications: newList })))
+                }
+              }}
+              placeholder="Add certification and press Enter"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+            />
+            <button
+              type="button"
+              onClick={() => handleAdd(certificationInput, setCertificationInput, formData.certifications, (newList) => setFormData(prev => ({ ...prev, certifications: newList })))}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              Add
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {formData.certifications.map((item, idx) => (
+              <span key={idx} className="bg-teal-100 text-teal-800 px-3 py-1 rounded-full flex items-center gap-1">
+                {item}
+                <button
+                  type="button"
+                  onClick={() => handleRemove(item, formData.certifications, (newList) => setFormData(prev => ({ ...prev, certifications: newList })))}
+                  className="ml-1 text-teal-500 hover:text-red-500"
+                >
+                  &times;
+                </button>
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
 
         {expandedSections.awards && (

@@ -75,9 +75,9 @@ export default function EditTreatment({ params }) {
           description: data.description || '',
           duration: data.duration || '',
           recovery: data.recovery || '',
-          topHospitals: data.topHospitals?.map(h => h.id || h) || [],
+          topHospitals: data.topHospitals?.map(h => h._id || h) || [],
           hospitalSelectionHelp: data.hospitalSelectionHelp || '',
-          topDoctors: data.topDoctors?.map(d => d.id || d) || [],
+          topDoctors: data.topDoctors?.map(d => d._id || d) || [],
           doctorSelectionHelp: data.doctorSelectionHelp || '',
           diagnosticTools: data.diagnosticTools || [],
           advancedTreatmentOptions: data.advancedTreatmentOptions || [],
@@ -326,7 +326,7 @@ const TreatmentDetailsEditTab = ({ formData, setFormData, hospitals, doctors, go
                 onChange={(selected) => setFormData(prev => ({ ...prev, topHospitals: selected }))}
                 placeholder="Search and select hospitals..."
                 displayKey="name"
-                valueKey="id"
+                valueKey="_id"
               />
               <p className="text-xs text-gray-500">Search and select hospitals that offer this treatment</p>
             </div>
@@ -338,7 +338,7 @@ const TreatmentDetailsEditTab = ({ formData, setFormData, hospitals, doctors, go
                 onChange={(selected) => setFormData(prev => ({ ...prev, topDoctors: selected }))}
                 placeholder="Search and select doctors..."
                 displayKey="name"
-                valueKey="id"
+                valueKey="_id"
                 subtitleKey="specialty"
               />
               <p className="text-xs text-gray-500">Search and select doctors who specialize in this treatment</p>
