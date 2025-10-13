@@ -21,9 +21,16 @@ export default function EditDoctor({ params }) {
   const [error, setError] = useState("")
   const [expandedSections, setExpandedSections] = useState({
     specializations: true,
+    professionalExperience: true,
     degrees: true,
     languages: true,
     awards: true
+  })
+
+  const [professionalExperienceInput, setProfessionalExperienceInput] = useState({
+    position: '',
+    institution: '',
+    duration: ''
   })
 
   useEffect(() => {
@@ -52,6 +59,30 @@ export default function EditDoctor({ params }) {
     setList(list.filter(i => i !== item))
   }
 
+  const handleAddProfessionalExperience = () => {
+    if (professionalExperienceInput.position.trim() && 
+        professionalExperienceInput.institution.trim() && 
+        professionalExperienceInput.duration.trim()) {
+      const newExperience = {
+        position: professionalExperienceInput.position.trim(),
+        institution: professionalExperienceInput.institution.trim(),
+        duration: professionalExperienceInput.duration.trim()
+      }
+      setFormData(prev => ({
+        ...prev,
+        professionalExperience: [...(prev.professionalExperience || []), newExperience]
+      }))
+      setProfessionalExperienceInput({ position: '', institution: '', duration: '' })
+    }
+  }
+
+  const handleRemoveProfessionalExperience = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      professionalExperience: (prev.professionalExperience || []).filter((_, idx) => idx !== index)
+    }))
+  }
+
   useEffect(() => {
     DoctorApi.getById(id)
       .then(res => {
@@ -68,13 +99,15 @@ export default function EditDoctor({ params }) {
           designation: data.designation || '',
           hospitalId: data.hospitalId?._id || data.hospitalId || '',
           affiliatedHospitalIds: (data.affiliatedHospitalIds || []).map(h => h.name || h.id || h),
+          professionalExperience: data.professionalExperience || [],
           specializations: data.specializations || [],
           degrees: data.degrees || [],
           languages: data.languages || [],
           awards: data.awards || [],
           researchWork: data.researchWork || '',
           publications: data.publications || [],
-          certifications: data.certifications || []
+          certifications: data.certifications || [],
+          isActive: data.isActive !== undefined ? data.isActive : true
         })
       })
       .catch(err => setError(err?.message || 'Failed to load doctor'))
@@ -95,6 +128,7 @@ export default function EditDoctor({ params }) {
       fd.append('designation', formData.designation || '')
       fd.append('hospitalId', formData.hospitalId || '')
       fd.append('affiliatedHospitalIds', JSON.stringify(formData.affiliatedHospitalIds || []))
+      fd.append('professionalExperience', JSON.stringify(formData.professionalExperience || []))
       fd.append('specializations', JSON.stringify(formData.specializations || []))
       fd.append('degrees', JSON.stringify(formData.degrees || []))
       fd.append('languages', JSON.stringify(formData.languages || []))
@@ -102,6 +136,7 @@ export default function EditDoctor({ params }) {
       fd.append('researchWork', formData.researchWork || '')
       fd.append('publications', JSON.stringify(formData.publications || []))
       fd.append('certifications', JSON.stringify(formData.certifications || []))
+      fd.append('isActive', formData.isActive)
       if (formData.image && typeof formData.image !== 'string') {
         fd.append('image', formData.image)
       }
@@ -183,6 +218,10 @@ export default function EditDoctor({ params }) {
               toggleSection={toggleSection}
               handleAdd={handleAdd}
               handleRemove={handleRemove}
+              handleAddProfessionalExperience={handleAddProfessionalExperience}
+              handleRemoveProfessionalExperience={handleRemoveProfessionalExperience}
+              professionalExperienceInput={professionalExperienceInput}
+              setProfessionalExperienceInput={setProfessionalExperienceInput}
               goBack={goBack}
               submitUpdate={submitUpdate}
               saving={saving}
@@ -242,10 +281,14 @@ const DoctorDetailsEditTab = ({ formData, setFormData, hospitals, goNext }) => {
                 type="text" 
                 placeholder="e.g., DOC_001" 
                 value={formData.id}
-                onChange={(e) => setFormData(prev => ({ ...prev, id: e.target.value }))}
+                onChange={(e) => {
+                  const value = e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, '');
+                  setFormData(prev => ({ ...prev, id: value }));
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
                 required
               />
+              <p className="text-xs text-gray-500">Only letters, numbers, hyphens, and underscores allowed</p>
             </div>
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">Doctor Name *</label>
@@ -314,8 +357,8 @@ const DoctorDetailsEditTab = ({ formData, setFormData, hospitals, goNext }) => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
               />
             </div>
-            </div>
-            </div>
+          </div>
+        </div>
 
         {/* Hospital Assignment */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -421,6 +464,10 @@ const ProfileBioEditTab = ({
   toggleSection,
   handleAdd,
   handleRemove,
+  handleAddProfessionalExperience,
+  handleRemoveProfessionalExperience,
+  professionalExperienceInput,
+  setProfessionalExperienceInput,
   goBack,
   submitUpdate,
   saving
@@ -704,6 +751,80 @@ const ProfileBioEditTab = ({
                     &times;
                   </button>
                 </span>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Professional Experience */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div 
+          className="flex items-center justify-between mb-4 cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors"
+          onClick={() => toggleSection('professionalExperience')}
+        >
+          <div className="flex items-center space-x-2">
+            <Briefcase className="w-5 h-5 text-gray-600" />
+            <h3 className="text-lg font-medium text-gray-900">Professional Experience</h3>
+            <span className="text-sm text-gray-500">({formData.professionalExperience?.length || 0})</span>
+          </div>
+          {expandedSections.professionalExperience ? (
+            <ChevronUp className="w-5 h-5 text-gray-400" />
+          ) : (
+            <ChevronDown className="w-5 h-5 text-gray-400" />
+          )}
+        </div>
+        
+        {expandedSections.professionalExperience && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <input 
+                type="text" 
+                value={professionalExperienceInput.position || ''}
+                onChange={(e) => setProfessionalExperienceInput(prev => ({ ...prev, position: e.target.value }))}
+                placeholder="Position (e.g., Senior Consultant)" 
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500" 
+              />
+              <input 
+                type="text" 
+                value={professionalExperienceInput.institution || ''}
+                onChange={(e) => setProfessionalExperienceInput(prev => ({ ...prev, institution: e.target.value }))}
+                placeholder="Institution (e.g., Fortis Memorial Research Institute)" 
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500" 
+              />
+              <input 
+                type="text" 
+                value={professionalExperienceInput.duration || ''}
+                onChange={(e) => setProfessionalExperienceInput(prev => ({ ...prev, duration: e.target.value }))}
+                placeholder="Duration (e.g., 24+ years)" 
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500" 
+              />
+            </div>
+            <div className="flex gap-2">
+              <button 
+                type="button" 
+                onClick={() => handleAddProfessionalExperience()}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Add Experience
+              </button>
+            </div>
+            <div className="space-y-2">
+              {formData.professionalExperience?.map((exp, idx) => (
+                <div key={idx} className="bg-gray-50 p-3 rounded-md flex items-center justify-between">
+                  <div>
+                    <span className="font-semibold text-gray-800">{exp.position}</span>
+                    <span className="text-gray-600"> at {exp.institution}</span>
+                    <span className="text-gray-500"> ({exp.duration})</span>
+                  </div>
+                  <button 
+                    type="button" 
+                    onClick={() => handleRemoveProfessionalExperience(idx)} 
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               ))}
             </div>
           </div>

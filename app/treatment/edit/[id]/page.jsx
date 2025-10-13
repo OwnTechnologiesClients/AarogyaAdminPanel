@@ -83,7 +83,8 @@ export default function EditTreatment({ params }) {
           advancedTreatmentOptions: data.advancedTreatmentOptions || [],
           advantages: data.advantages || [],
           costConsiderations: data.costConsiderations || '',
-          faq: data.faq || []
+          faq: data.faq || [],
+          isActive: data.isActive !== undefined ? data.isActive : true
         })
       })
       .catch(err => setError(err?.message || 'Failed to load treatment'))
@@ -109,6 +110,7 @@ export default function EditTreatment({ params }) {
       fd.append('advantages', JSON.stringify(formData.advantages || []))
       fd.append('costConsiderations', formData.costConsiderations || '')
       fd.append('faq', JSON.stringify(formData.faq || []))
+      fd.append('isActive', formData.isActive)
       if (formData.image && typeof formData.image !== 'string') {
         fd.append('image', formData.image)
       }

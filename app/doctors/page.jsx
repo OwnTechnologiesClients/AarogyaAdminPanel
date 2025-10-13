@@ -80,6 +80,41 @@ export default function DoctorList() {
     resetPagination()
   }
 
+  const handleToggleStatus = async (doctorId, currentStatus, doctorName) => {
+    const newStatus = !currentStatus
+    const statusText = newStatus ? 'Active' : 'Disabled'
+    
+    try {
+      const fd = new FormData()
+      fd.append('isActive', newStatus)
+      
+      await DoctorApi.update(doctorId, fd)
+      
+      await Swal.fire({
+        title: 'Updated!',
+        text: `"${doctorName}" is now ${statusText}`,
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false
+      })
+      
+      // Refresh the list
+      const data = await DoctorApi.list({ page: currentPage, limit: itemsPerPage, search: searchTerm })
+      if (data?.success) {
+        setDoctors(data.data || [])
+        setTotalItems(data.total || 0)
+        setTotalPages(data.totalPages || 1)
+      }
+    } catch (error) {
+      await Swal.fire({
+        title: 'Error!',
+        text: error?.response?.data?.message || 'Failed to update status',
+        icon: 'error',
+        timer: 2000
+      })
+    }
+  }
+
   const handleDeleteDoctor = async (doctorId, doctorName) => {
     const result = await Swal.fire({
       title: 'Are you sure?',
@@ -189,6 +224,9 @@ export default function DoctorList() {
                     Primary Hospital
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
                     Action
                   </th>
                 </tr>
@@ -196,7 +234,7 @@ export default function DoctorList() {
               <tbody className="bg-white divide-y divide-blue-100">
                 {loading ? (
                   <tr>
-                    <td colSpan="7" className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan="8" className="px-4 py-8 text-center text-gray-500">
                       <div className="flex items-center justify-center space-x-2">
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                         <span>Loading doctors...</span>
@@ -205,7 +243,7 @@ export default function DoctorList() {
                   </tr>
                 ) : doctors.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan="8" className="px-4 py-8 text-center text-gray-500">
                       <div className="flex flex-col items-center space-y-2">
                         <div className="text-gray-400">
                           <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -261,6 +299,21 @@ export default function DoctorList() {
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-700">
                       {doctor.hospitalId?.name || '-'}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <button
+                        onClick={() => handleToggleStatus(doctor.id, doctor.isActive, doctor.name)}
+                        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                          doctor.isActive ? 'bg-green-600 focus:ring-green-500' : 'bg-gray-200 focus:ring-gray-500'
+                        }`}
+                        title={doctor.isActive ? 'Click to disable' : 'Click to enable'}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                            doctor.isActive ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-2">

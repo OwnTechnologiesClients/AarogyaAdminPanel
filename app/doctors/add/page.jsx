@@ -16,6 +16,7 @@ export default function AddDoctor() {
   const [activeTab, setActiveTab] = useState('doctor-details')
   const [expandedSections, setExpandedSections] = useState({
     specializations: true,
+    professionalExperience: true,
     degrees: true,
     languages: true,
     awards: true
@@ -34,12 +35,20 @@ export default function AddDoctor() {
     designation: '',
     degrees: [],
     affiliatedHospitalIds: [],
+    professionalExperience: [],
     specializations: [],
     languages: [],
     awards: [],
     researchWork: '',
     publications: [],
-    certifications: []
+    certifications: [],
+    isActive: false // Default to disabled, admin will enable from list page
+  })
+
+  const [professionalExperienceInput, setProfessionalExperienceInput] = useState({
+    position: '',
+    institution: '',
+    duration: ''
   })
 
   const [hospitals, setHospitals] = useState([])
@@ -72,6 +81,30 @@ export default function AddDoctor() {
     setList(list.filter(i => i !== item))
   }
 
+  const handleAddProfessionalExperience = () => {
+    if (professionalExperienceInput.position.trim() && 
+        professionalExperienceInput.institution.trim() && 
+        professionalExperienceInput.duration.trim()) {
+      const newExperience = {
+        position: professionalExperienceInput.position.trim(),
+        institution: professionalExperienceInput.institution.trim(),
+        duration: professionalExperienceInput.duration.trim()
+      }
+      setFormData(prev => ({
+        ...prev,
+        professionalExperience: [...prev.professionalExperience, newExperience]
+      }))
+      setProfessionalExperienceInput({ position: '', institution: '', duration: '' })
+    }
+  }
+
+  const handleRemoveProfessionalExperience = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      professionalExperience: prev.professionalExperience.filter((_, idx) => idx !== index)
+    }))
+  }
+
   const submitDoctor = async () => {
     if (submitting) return
     // Basic validation
@@ -97,6 +130,7 @@ export default function AddDoctor() {
       fd.append('hospitalId', formData.hospitalId || '')
       fd.append('designation', formData.designation || '')
       fd.append('affiliatedHospitalIds', JSON.stringify(formData.affiliatedHospitalIds || []))
+      fd.append('professionalExperience', JSON.stringify(formData.professionalExperience || []))
       fd.append('specializations', JSON.stringify(formData.specializations || []))
       fd.append('workExperience', JSON.stringify(formData.workExperience || []))
       fd.append('languages', JSON.stringify(formData.languages || []))
@@ -104,6 +138,7 @@ export default function AddDoctor() {
       fd.append('researchWork', formData.researchWork || '')
       fd.append('publications', JSON.stringify(formData.publications || []))
       fd.append('certifications', JSON.stringify(formData.certifications || []))
+      fd.append('isActive', formData.isActive)
       fd.append('image', formData.image)
 
       await api.post('/doctors/create', fd, {
@@ -185,6 +220,10 @@ export default function AddDoctor() {
               toggleSection={toggleSection}
               handleAdd={handleAdd}
               handleRemove={handleRemove}
+              handleAddProfessionalExperience={handleAddProfessionalExperience}
+              handleRemoveProfessionalExperience={handleRemoveProfessionalExperience}
+              professionalExperienceInput={professionalExperienceInput}
+              setProfessionalExperienceInput={setProfessionalExperienceInput}
               goBack={goBack}
               submitDoctor={submitDoctor}
               submitting={submitting}
@@ -236,10 +275,14 @@ const DoctorDetailsTab = ({ formData, setFormData, hospitals, goNext }) => {
                 type="text" 
                 placeholder="e.g., DOC_001" 
                 value={formData.id}
-                onChange={(e) => setFormData(prev => ({ ...prev, id: e.target.value }))}
+                onChange={(e) => {
+                  const value = e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, '');
+                  setFormData(prev => ({ ...prev, id: value }));
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
                 required
               />
+              <p className="text-xs text-gray-500">Only letters, numbers, hyphens, and underscores allowed</p>
             </div>
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">Doctor Name *</label>
@@ -404,6 +447,10 @@ const ProfileBioTab = ({
   toggleSection,
   handleAdd,
   handleRemove,
+  handleAddProfessionalExperience,
+  handleRemoveProfessionalExperience,
+  professionalExperienceInput,
+  setProfessionalExperienceInput,
   goBack,
   submitDoctor,
   submitting
@@ -593,6 +640,80 @@ const ProfileBioTab = ({
                     &times;
                   </button>
                 </span>
+              ))}
+            </div>
+          </div>
+        )}
+        </div>
+
+      {/* Professional Experience */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div 
+          className="flex items-center justify-between mb-4 cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors"
+          onClick={() => toggleSection('professionalExperience')}
+        >
+          <div className="flex items-center space-x-2">
+            <Briefcase className="w-5 h-5 text-gray-600" />
+            <h3 className="text-lg font-medium text-gray-900">Professional Experience</h3>
+            <span className="text-sm text-gray-500">({formData.professionalExperience.length})</span>
+          </div>
+          {expandedSections.professionalExperience ? (
+            <ChevronUp className="w-5 h-5 text-gray-400" />
+          ) : (
+            <ChevronDown className="w-5 h-5 text-gray-400" />
+          )}
+        </div>
+        
+        {expandedSections.professionalExperience && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <input 
+                type="text" 
+                value={professionalExperienceInput.position || ''}
+                onChange={(e) => setProfessionalExperienceInput(prev => ({ ...prev, position: e.target.value }))}
+                placeholder="Position (e.g., Senior Consultant)" 
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500" 
+              />
+              <input 
+                type="text" 
+                value={professionalExperienceInput.institution || ''}
+                onChange={(e) => setProfessionalExperienceInput(prev => ({ ...prev, institution: e.target.value }))}
+                placeholder="Institution (e.g., Fortis Memorial Research Institute)" 
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500" 
+              />
+              <input 
+                type="text" 
+                value={professionalExperienceInput.duration || ''}
+                onChange={(e) => setProfessionalExperienceInput(prev => ({ ...prev, duration: e.target.value }))}
+                placeholder="Duration (e.g., 24+ years)" 
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500" 
+              />
+            </div>
+            <div className="flex gap-2">
+              <button 
+                type="button" 
+                onClick={() => handleAddProfessionalExperience()}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Add Experience
+              </button>
+            </div>
+            <div className="space-y-2">
+              {formData.professionalExperience.map((exp, idx) => (
+                <div key={idx} className="bg-gray-50 p-3 rounded-md flex items-center justify-between">
+                  <div>
+                    <span className="font-semibold text-gray-800">{exp.position}</span>
+                    <span className="text-gray-600"> at {exp.institution}</span>
+                    <span className="text-gray-500"> ({exp.duration})</span>
+                  </div>
+                  <button 
+                    type="button" 
+                    onClick={() => handleRemoveProfessionalExperience(idx)} 
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               ))}
             </div>
           </div>
@@ -875,48 +996,6 @@ const ProfileBioTab = ({
           </div>
         </div>
       </div>
-
-        {expandedSections.awards && (
-          <div className="space-y-4">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={awardInput}
-                onChange={(e) => setAwardInput(e.target.value)}
-                onKeyDown={(e) => { 
-                  if (e.key === 'Enter') { 
-                    e.preventDefault(); 
-                    handleAdd(awardInput, setAwardInput, formData.awards, (newList) => setFormData(prev => ({ ...prev, awards: newList })))
-                  }
-                }}
-                placeholder="Add award and press Enter"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-              />
-              <button 
-                type="button" 
-                onClick={() => handleAdd(awardInput, setAwardInput, formData.awards, (newList) => setFormData(prev => ({ ...prev, awards: newList })))}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-              >
-                Add
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {formData.awards.map((item, idx) => (
-                <span key={idx} className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full flex items-center gap-1">
-                  {item}
-                  <button 
-                    type="button" 
-                    onClick={() => handleRemove(item, formData.awards, (newList) => setFormData(prev => ({ ...prev, awards: newList })))} 
-                    className="ml-1 text-yellow-500 hover:text-red-500"
-                  >
-                    &times;
-                  </button>
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-        </div>
 
       {/* Step Controls (Profile tab) */}
       <div className="flex justify-between items-center pt-4">

@@ -63,6 +63,42 @@ export default function HospitalList() {
     resetPagination() // Reset to first page when searching
   }
 
+  const handleToggleStatus = async (hospitalId, currentStatus, hospitalName) => {
+    const newStatus = !currentStatus
+    const statusText = newStatus ? 'Active' : 'Disabled'
+    
+    const Swal = (await import('sweetalert2')).default
+
+    try {
+      const fd = new FormData()
+      fd.append('isActive', newStatus)
+      
+      await HospitalApi.update(hospitalId, fd)
+      
+      await Swal.fire({
+        title: 'Updated!',
+        text: `"${hospitalName}" is now ${statusText}`,
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false
+      })
+      
+      // Refresh the list
+      const data = await HospitalApi.list({ page: currentPage, limit: itemsPerPage, search: searchTerm })
+      if (data?.success) {
+        setItems(data.data || [])
+        handleItemsPerPageChange(itemsPerPage, data.total || 0, data.totalPages || 1)
+      }
+    } catch (error) {
+      await Swal.fire({
+        title: 'Error!',
+        text: error?.response?.data?.message || 'Failed to update status',
+        icon: 'error',
+        timer: 2000
+      })
+    }
+  }
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -131,6 +167,9 @@ export default function HospitalList() {
                     Doctors
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
                     Action
                   </th>
                 </tr>
@@ -177,6 +216,21 @@ export default function HospitalList() {
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-700">
                       {hospital.overview?.doctors ?? '-'}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <button
+                        onClick={() => handleToggleStatus(hospital.id, hospital.isActive, hospital.name)}
+                        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                          hospital.isActive ? 'bg-green-600 focus:ring-green-500' : 'bg-gray-200 focus:ring-gray-500'
+                        }`}
+                        title={hospital.isActive ? 'Click to disable' : 'Click to enable'}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                            hospital.isActive ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-2">

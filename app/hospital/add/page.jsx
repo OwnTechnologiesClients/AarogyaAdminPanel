@@ -21,22 +21,19 @@ export default function AddHospital() {
   const [formData, setFormData] = useState({
     id: '',
     name: '',
-    image: null,
-    rating: {},
+    rating: {
+      userScore: '',
+      googleRating: ''
+    },
     location: '',
     address: '',
     doctorsCount: '',
     established: '',
     accreditation: [],
     contact: {
-      phone: '',
-      email: '',
       website: '',
-      emergency: '',
       address: ''
     },
-    userScore: '',
-    googleRating: '',
     specialties: [],
     hospitalFeatures: [],
     advancedMedicalEquipment: [],
@@ -63,7 +60,8 @@ export default function AddHospital() {
       emergency: '',
       opd: ''
     },
-    gallery: []
+    gallery: [],
+    isActive: false // Default to disabled, admin will enable from list page
   })
 
   const [submitting, setSubmitting] = useState(false)
@@ -121,7 +119,7 @@ export default function AddHospital() {
   const addSpecialty = () => {
     setFormData(prev => ({ 
       ...prev, 
-      specialties: [...prev.specialties, { name: '', rating: '', doctorsCount: '', description: '', keyServices: '' }] 
+      specialties: [...prev.specialties, { name: '', doctorsCount: '', description: '', keyServices: '' }] 
     }))
   }
 
@@ -189,15 +187,32 @@ export default function AddHospital() {
       })
       return
     }
-    if (!formData.image) {
+
+    // Validate Hospital Features
+    const invalidFeatures = (formData.hospitalFeatures || []).filter((ft, idx) => !ft.name || ft.name.trim() === '');
+    if (invalidFeatures.length > 0) {
       await Swal.fire({
         title: 'Validation Error!',
-        text: 'Please upload the main hospital image',
+        text: 'Please provide names for all Hospital Features (marked with *)',
         icon: 'warning',
         confirmButtonText: 'OK'
       })
       return
     }
+
+    // Validate Advanced Medical Equipment
+    const invalidEquipment = (formData.advancedMedicalEquipment || []).filter((eq, idx) => !eq.name || eq.name.trim() === '');
+    if (invalidEquipment.length > 0) {
+      await Swal.fire({
+        title: 'Validation Error!',
+        text: 'Please provide names for all Medical Equipment (marked with *)',
+        icon: 'warning',
+        confirmButtonText: 'OK'
+      })
+      return
+    }
+
+    // Main image is optional - no validation needed
 
     setSubmitting(true)
     try {
@@ -210,22 +225,21 @@ export default function AddHospital() {
       if (formData.rating?.userScore !== '') fd.append('userScore', String(Number(formData.rating.userScore)))
       if (formData.rating?.googleRating !== '') fd.append('googleRating', String(Number(formData.rating.googleRating)))
       fd.append('doctorsCount', String(Number(formData.overview?.doctors || 0)))
-      fd.append('image', formData.image)
       ;(formData.gallery || []).filter(Boolean).forEach((file) => {
         fd.append('gallery', file)
       })
       fd.append('accreditation', JSON.stringify(formData.accreditation || []))
       fd.append('contact', JSON.stringify(formData.contact || {}))
+      fd.append('isActive', formData.isActive)
       fd.append('operatingHours', JSON.stringify(formData.operatingHours || {}))
       fd.append('specialties', JSON.stringify((formData.specialties || []).map(s => ({
         name: s.name || '',
-        rating: s.rating ? Number(s.rating) : undefined,
         doctorsCount: s.doctorsCount ? Number(s.doctorsCount) : undefined,
         description: s.description || '',
         keyServices: processKeyServices(s.keyServices),
         icon: s.icon || ''
       }))))
-      fd.append('features', JSON.stringify(formData.hospitalFeatures || []))
+      fd.append('hospitalFeatures', JSON.stringify(formData.hospitalFeatures || []))
       fd.append('advancedMedicalEquipment', JSON.stringify(formData.advancedMedicalEquipment || []))
       fd.append('about', JSON.stringify(formData.about || {}))
       fd.append('overview', JSON.stringify(formData.overview || {}))
@@ -315,10 +329,14 @@ export default function AddHospital() {
                         type="text" 
                         placeholder="e.g., APOLLO_001" 
                         value={formData.id}
-                        onChange={(e) => setFormData(prev => ({ ...prev, id: e.target.value }))}
+                        onChange={(e) => {
+                          const value = e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, '');
+                          setFormData(prev => ({ ...prev, id: value }));
+                        }}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
                         required
                       />
+                      <p className="text-xs text-gray-500">Only letters, numbers, hyphens, and underscores allowed</p>
                     </div>
                     <div className="space-y-2">
                       <label className="block text-sm font-medium text-gray-700">Hospital Name *</label>
@@ -370,6 +388,7 @@ export default function AddHospital() {
                     </div>
                   </div>
                 </div>
+
 
                 {/* Hospital Classification */}
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -487,6 +506,7 @@ export default function AddHospital() {
                           ...prev, 
                           rating: { ...prev.rating, userScore: e.target.value }
                         }))}
+                        onWheel={(e) => e.target.blur()}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
                       />
                     </div>
@@ -503,6 +523,7 @@ export default function AddHospital() {
                           ...prev, 
                           rating: { ...prev.rating, googleRating: e.target.value }
                         }))}
+                        onWheel={(e) => e.target.blur()}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
                       />
                     </div>
@@ -523,6 +544,7 @@ export default function AddHospital() {
                           ...prev, 
                           overview: { ...prev.overview, doctors: e.target.value }
                         }))}
+                        onWheel={(e) => e.target.blur()}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
                       />
                     </div>
@@ -539,6 +561,7 @@ export default function AddHospital() {
                             sizeAndCapacity: { ...prev.overview?.sizeAndCapacity, ot: e.target.value }
                           }
                         }))}
+                        onWheel={(e) => e.target.blur()}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
                       />
                     </div>
@@ -555,6 +578,7 @@ export default function AddHospital() {
                             sizeAndCapacity: { ...prev.overview?.sizeAndCapacity, icu: e.target.value }
                           }
                         }))}
+                        onWheel={(e) => e.target.blur()}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
                       />
                     </div>
@@ -571,6 +595,7 @@ export default function AddHospital() {
                             sizeAndCapacity: { ...prev.overview?.sizeAndCapacity, patientBeds: e.target.value }
                           }
                         }))}
+                        onWheel={(e) => e.target.blur()}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
                       />
                     </div>
@@ -659,42 +684,12 @@ export default function AddHospital() {
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Contact Information</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700">Email Address</label>
-                      <input 
-                        type="email" 
-                        placeholder="info@hospital.com" 
-                        value={formData.contact?.email || ''}
-                        onChange={(e) => setFormData(prev => ({ ...prev, contact: { ...prev.contact, email: e.target.value } }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700">Phone Number</label>
-                      <input 
-                        type="text" 
-                        placeholder="+91-44-2829-3333" 
-                        value={formData.contact?.phone || ''}
-                        onChange={(e) => setFormData(prev => ({ ...prev, contact: { ...prev.contact, phone: e.target.value } }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-                      />
-                    </div>
-                    <div className="space-y-2">
                       <label className="block text-sm font-medium text-gray-700">Website</label>
                       <input 
                         type="text" 
                         placeholder="https://www.hospital.com" 
                         value={formData.contact?.website || ''}
                         onChange={(e) => setFormData(prev => ({ ...prev, contact: { ...prev.contact, website: e.target.value } }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700">Emergency Phone</label>
-                      <input 
-                        type="text" 
-                        placeholder="+91-44-2829-3333" 
-                        value={formData.contact?.emergency || ''}
-                        onChange={(e) => setFormData(prev => ({ ...prev, contact: { ...prev.contact, emergency: e.target.value } }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
                       />
                     </div>
@@ -779,21 +774,7 @@ export default function AddHospital() {
                               />
                             </div>
                             
-                            <div className="grid grid-cols-2 gap-3">
-                              <div className="space-y-1">
-                                <label className="block text-xs font-medium text-gray-600">Rating (0-5)</label>
-                                <input 
-                                  type="number" 
-                                  min="0" 
-                                  max="5" 
-                                  step="0.1" 
-                                  placeholder="4.5" 
-                                  value={sp.rating} 
-                                  onChange={(e) => updateSpecialty(idx, 'rating', e.target.value)} 
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 text-sm" 
-                                />
-                              </div>
-                              
+                            <div className="grid grid-cols-1 gap-3">
                               <div className="space-y-1">
                                 <label className="block text-xs font-medium text-gray-600">Number of Doctors</label>
                                 <input 
@@ -802,6 +783,7 @@ export default function AddHospital() {
                                   placeholder="25" 
                                   value={sp.doctorsCount} 
                                   onChange={(e) => updateSpecialty(idx, 'doctorsCount', e.target.value)} 
+                                  onWheel={(e) => e.target.blur()}
                                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 text-sm" 
                                 />
                               </div>

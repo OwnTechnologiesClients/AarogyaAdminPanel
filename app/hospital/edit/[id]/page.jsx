@@ -23,12 +23,6 @@ export default function EditHospitalPage() {
   })
 
   useEffect(() => {
-    // Redirect to login if not authenticated
-    const token = typeof window !== 'undefined' ? (localStorage.getItem('adminToken') || localStorage.getItem('token')) : null
-    if (!token) {
-      router.push('/login')
-      return
-    }
     if (!id) return
     const fetchOne = async () => {
       setLoading(true)
@@ -63,7 +57,8 @@ export default function EditHospitalPage() {
           advancedMedicalEquipment: json.data.advancedMedicalEquipment || [],
           nearbyLandmarks: json.data.nearbyLandmarks || [],
           additionalServices: json.data.additionalServices || [],
-          howToReach: json.data.howToReach || ''
+          howToReach: json.data.howToReach || '',
+          isActive: json.data.isActive !== undefined ? json.data.isActive : true
         })
       } catch (e) {
         setError(e?.message || 'Error')
@@ -237,13 +232,13 @@ export default function EditHospitalPage() {
     if (formData.contact && typeof formData.contact === 'object') {
       fd.append('contact', JSON.stringify(formData.contact))
     }
+    fd.append('isActive', formData.isActive)
     if (formData.operatingHours && typeof formData.operatingHours === 'object') {
       fd.append('operatingHours', JSON.stringify(formData.operatingHours))
     }
     if (Array.isArray(formData.specialties)) {
       const cleanSpecialties = formData.specialties.map((s) => ({
         name: s?.name ?? '',
-        rating: s?.rating ?? '',
         doctorsCount: s?.doctorsCount ?? '',
         description: s?.description ?? '',
         keyServices: processKeyServices(s?.keyServices)
@@ -746,42 +741,12 @@ export default function EditHospitalPage() {
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Contact Information</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700">Email Address</label>
-                      <input 
-                        type="email" 
-                        placeholder="info@hospital.com" 
-                        value={formData?.contact?.email || ''}
-                        onChange={(e) => setFormData(prev => ({ ...prev, contact: { ...prev.contact, email: e.target.value } }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700">Phone Number</label>
-                      <input 
-                        type="text" 
-                        placeholder="+91-44-2829-3333" 
-                        value={formData?.contact?.phone || ''}
-                        onChange={(e) => setFormData(prev => ({ ...prev, contact: { ...prev.contact, phone: e.target.value } }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-                      />
-                    </div>
-                    <div className="space-y-2">
                       <label className="block text-sm font-medium text-gray-700">Website</label>
                       <input 
                         type="text" 
                         placeholder="https://www.hospital.com" 
                         value={formData?.contact?.website || ''}
                         onChange={(e) => setFormData(prev => ({ ...prev, contact: { ...prev.contact, website: e.target.value } }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700">Emergency Phone</label>
-                      <input 
-                        type="text" 
-                        placeholder="+91-44-2829-3333" 
-                        value={formData?.contact?.emergency || ''}
-                        onChange={(e) => setFormData(prev => ({ ...prev, contact: { ...prev.contact, emergency: e.target.value } }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
                       />
                     </div>
@@ -875,21 +840,7 @@ export default function EditHospitalPage() {
                               />
                             </div>
                             
-                            <div className="grid grid-cols-2 gap-3">
-                              <div className="space-y-1">
-                                <label className="block text-xs font-medium text-gray-600">Rating (0-5)</label>
-                                <input 
-                                  type="number" 
-                                  min="0" 
-                                  max="5" 
-                                  step="0.1" 
-                                  placeholder="4.5" 
-                                  value={sp.rating || ''} 
-                                  onChange={(e) => updateSpecialty(idx, 'rating', e.target.value)} 
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 text-sm" 
-                                />
-                              </div>
-                              
+                            <div className="grid grid-cols-1 gap-3">
                               <div className="space-y-1">
                                 <label className="block text-xs font-medium text-gray-600">Number of Doctors</label>
                                 <input 

@@ -84,6 +84,41 @@ export default function TreatmentList() {
     resetPagination()
   }
 
+  const handleToggleStatus = async (treatmentId, currentStatus, treatmentName) => {
+    const newStatus = !currentStatus
+    const statusText = newStatus ? 'Active' : 'Disabled'
+    
+    try {
+      const fd = new FormData()
+      fd.append('isActive', newStatus)
+      
+      await TreatmentApi.update(treatmentId, fd)
+      
+      await Swal.fire({
+        title: 'Updated!',
+        text: `"${treatmentName}" is now ${statusText}`,
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false
+      })
+      
+      // Refresh the list
+      const data = await TreatmentApi.list({ page: currentPage, limit: itemsPerPage, search: searchTerm })
+      if (data?.success) {
+        setTreatments(data.data || [])
+        setTotalItems(data.total || 0)
+        setTotalPages(data.totalPages || 1)
+      }
+    } catch (error) {
+      await Swal.fire({
+        title: 'Error!',
+        text: error?.response?.data?.message || 'Failed to update status',
+        icon: 'error',
+        timer: 2000
+      })
+    }
+  }
+
   const handleDeleteTreatment = async (treatmentId, treatmentName) => {
     const result = await Swal.fire({
       title: 'Are you sure?',
@@ -193,6 +228,9 @@ export default function TreatmentList() {
                     Top Hospitals
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
                     Action
                   </th>
                 </tr>
@@ -200,7 +238,7 @@ export default function TreatmentList() {
               <tbody className="bg-white divide-y divide-blue-100">
                 {loading ? (
                   <tr>
-                    <td colSpan="7" className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan="8" className="px-4 py-8 text-center text-gray-500">
                       <div className="flex items-center justify-center space-x-2">
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                         <span>Loading treatments...</span>
@@ -209,7 +247,7 @@ export default function TreatmentList() {
                   </tr>
                 ) : treatments.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan="8" className="px-4 py-8 text-center text-gray-500">
                       <div className="flex flex-col items-center space-y-2">
                         <div className="text-gray-400">
                           <Stethoscope className="w-12 h-12 mx-auto" />
@@ -278,6 +316,21 @@ export default function TreatmentList() {
                           <span className="text-xs text-gray-600">{treatment.topHospitals?.length || 0} hospitals</span>
                       </div>
                     </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <button
+                          onClick={() => handleToggleStatus(treatment.id, treatment.isActive, treatment.name)}
+                          className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                            treatment.isActive ? 'bg-green-600 focus:ring-green-500' : 'bg-gray-200 focus:ring-gray-500'
+                          }`}
+                          title={treatment.isActive ? 'Click to disable' : 'Click to enable'}
+                        >
+                          <span
+                            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                              treatment.isActive ? 'translate-x-5' : 'translate-x-0'
+                            }`}
+                          />
+                        </button>
+                      </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-2">
                           <button 

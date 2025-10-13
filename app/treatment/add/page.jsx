@@ -37,7 +37,8 @@ export default function AddTreatment() {
     advancedTreatmentOptions: [],
     advantages: [],
     costConsiderations: '',
-    faq: []
+    faq: [],
+    isActive: false // Default to disabled, admin will enable from list page
   })
 
   const [hospitals, setHospitals] = useState([])
@@ -104,6 +105,7 @@ export default function AddTreatment() {
       fd.append('advantages', JSON.stringify(formData.advantages || []))
       fd.append('costConsiderations', formData.costConsiderations || '')
       fd.append('faq', JSON.stringify(formData.faq || []))
+      fd.append('isActive', formData.isActive)
       if (formData.image) {
         fd.append('image', formData.image)
       }
