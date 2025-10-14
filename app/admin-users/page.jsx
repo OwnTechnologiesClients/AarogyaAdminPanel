@@ -4,30 +4,31 @@ import { useState, useEffect } from "react"
 import { Layout } from "@/components/layout"
 import { Pagination } from "@/components/ui/pagination"
 import { 
+  Plus, 
   Search, 
-  Filter,
-  User,
-  Mail,
-  Phone,
-  Shield,
-  Calendar,
+  Edit, 
+  Trash2, 
   Eye,
-  ToggleLeft,
-  ToggleRight
+  UserCog,
+  Mail,
+  Shield,
+  Filter
 } from "lucide-react"
+import Link from "next/link"
 import Swal from 'sweetalert2'
 import { useRouter } from 'next/navigation'
+import { isSuperadmin } from '@/lib/authUtils'
 
-export default function UsersPage() {
+export default function AdminUsersPage() {
   const router = useRouter()
   const [searchTerm, setSearchTerm] = useState("")
-  const [users, setUsers] = useState([])
+  const [adminUsers, setAdminUsers] = useState([])
   const [loading, setLoading] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalItems, setTotalItems] = useState(0)
   const [itemsPerPage, setItemsPerPage] = useState(10)
-  const [filterAuthProvider, setFilterAuthProvider] = useState("")
+  const [filterRole, setFilterRole] = useState("")
   const [filterStatus, setFilterStatus] = useState("")
 
   // Server-side pagination handlers
@@ -47,6 +48,11 @@ export default function UsersPage() {
   }
 
   useEffect(() => {
+    if (!isSuperadmin()) {
+      router.push('/')
+      return
+    }
+    
     const fetchData = async () => {
       setLoading(true)
       try {
@@ -54,21 +60,32 @@ export default function UsersPage() {
           page: currentPage,
           limit: itemsPerPage,
           ...(searchTerm && { search: searchTerm }),
-          ...(filterAuthProvider && { authProvider: filterAuthProvider }),
+          ...(filterRole && { role: filterRole }),
           ...(filterStatus && { isActive: filterStatus })
         })
 
-        const response = await fetch(`http://localhost:5000/api/users?${params}`)
+        const token = localStorage.getItem('adminToken')
+        const response = await fetch(`http://localhost:5000/api/admin/users?${params}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
         const data = await response.json()
 
         if (data?.success) {
-          setUsers(data.data || [])
+          setAdminUsers(data.data || [])
           setTotalItems(data.pagination?.total || 0)
           setTotalPages(data.pagination?.totalPages || 1)
+        } else {
+          console.error('API Error:', data)
+          setAdminUsers([])
+          setTotalItems(0)
+          setTotalPages(1)
         }
       } catch (e) {
-        console.error('Error fetching users:', e)
-        setUsers([])
+        console.error('Error fetching admin users:', e)
+        setAdminUsers([])
         setTotalItems(0)
         setTotalPages(1)
         if (e.response?.status === 404) {
@@ -81,53 +98,140 @@ export default function UsersPage() {
       }
     }
     fetchData()
-  }, [currentPage, itemsPerPage, searchTerm, filterAuthProvider, filterStatus])
+  }, [currentPage, itemsPerPage, searchTerm, filterRole, filterStatus, router])
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value)
     resetPagination()
   }
 
-  const handleToggleStatus = async (userId, currentStatus, userName) => {
+  const handleToggleStatus = async (adminUserId, adminUserName, currentStatus) => {
     const newStatus = !currentStatus
-    const statusText = newStatus ? 'Active' : 'Inactive'
+    const action = newStatus ? 'activate' : 'deactivate'
     
-    try {
-      const response = await fetch(`http://localhost:5000/api/users/${userId}/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ isActive: newStatus })
-      })
-      
-      if (response.ok) {
-        await Swal.fire({
-          title: 'Updated!',
-          text: `"${userName}" is now ${statusText}`,
-          icon: 'success',
-          timer: 1500,
-          showConfirmButton: false
+    const result = await Swal.fire({
+      title: `Are you sure?`,
+      text: `You are about to ${action} admin user "${adminUserName}".`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: newStatus ? '#10b981' : '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: `Yes, ${action}!`,
+      cancelButtonText: 'Cancel'
+    })
+
+    if (result.isConfirmed) {
+      try {
+        const token = localStorage.getItem('adminToken')
+        const response = await fetch(`http://localhost:5000/api/admin/users/${adminUserId}`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            isActive: newStatus
+          })
         })
         
-        // Refresh the list
-        const data = await fetch(`http://localhost:5000/api/users?page=${currentPage}&limit=${itemsPerPage}&search=${searchTerm}`)
-        const result = await data.json()
-        if (result?.success) {
-          setUsers(result.data || [])
-          setTotalItems(result.pagination?.total || 0)
-          setTotalPages(result.pagination?.totalPages || 1)
+        if (response.ok) {
+          await Swal.fire({
+            title: 'Success!',
+            text: `Admin user ${action}d successfully.`,
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false
+          })
+          
+          const data = await fetch(`http://localhost:5000/api/admin/users?page=${currentPage}&limit=${itemsPerPage}&search=${searchTerm}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          })
+          const result = await data.json()
+          if (result?.success) {
+            setAdminUsers(result.data || [])
+            setTotalItems(result.pagination?.total || 0)
+            setTotalPages(result.pagination?.totalPages || 1)
+          }
+        } else {
+          const errorData = await response.json()
+          await Swal.fire({
+            title: 'Error!',
+            text: errorData.message || `Failed to ${action} admin user`,
+            icon: 'error',
+            confirmButtonText: 'OK'
+          })
         }
-      } else {
-        throw new Error('Failed to update user status')
+      } catch (error) {
+        await Swal.fire({
+          title: 'Error!',
+          text: `Failed to ${action} admin user`,
+          icon: 'error',
+          confirmButtonText: 'OK'
+        })
       }
-    } catch (error) {
-      await Swal.fire({
-        title: 'Error!',
-        text: error?.message || 'Failed to update user status',
-        icon: 'error',
-        timer: 2000
-      })
+    }
+  }
+
+  const handleDeleteAdminUser = async (adminUserId, adminUserName) => {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: `You are about to delete admin user "${adminUserName}". This action cannot be undone!`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel'
+    })
+
+    if (result.isConfirmed) {
+      try {
+        const token = localStorage.getItem('adminToken')
+        const response = await fetch(`http://localhost:5000/api/admin/users/${adminUserId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
+        
+        if (response.ok) {
+          await Swal.fire({
+            title: 'Deleted!',
+            text: 'Admin user has been deleted successfully.',
+            icon: 'success',
+            confirmButtonText: 'OK'
+          })
+          // Refresh the data
+          router.refresh()
+          // Also refetch the data
+          const token = localStorage.getItem('adminToken')
+          const data = await fetch(`http://localhost:5000/api/admin/users?page=${currentPage}&limit=${itemsPerPage}&search=${searchTerm}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          })
+          const result = await data.json()
+          if (result?.success) {
+            setAdminUsers(result.data || [])
+            setTotalItems(result.pagination?.total || 0)
+            setTotalPages(result.pagination?.totalPages || 1)
+          }
+        } else {
+          throw new Error('Failed to delete admin user')
+        }
+      } catch (error) {
+        await Swal.fire({
+          title: 'Error!',
+          text: error?.message || 'Failed to delete admin user',
+          icon: 'error',
+          confirmButtonText: 'OK'
+        })
+      }
     }
   }
 
@@ -136,9 +240,14 @@ export default function UsersPage() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Registered Users</h1>
-            <p className="text-gray-700 text-lg">View and manage all users who have logged in</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Users</h1>
+            <p className="text-gray-700 text-lg">Manage admin users and their permissions</p>
           </div>
+          <Link href="/admin-users/add">
+            <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-sm">
+              Add New Admin User
+            </button>
+          </Link>
         </div>
 
         <div className="bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-lg border border-blue-100">
@@ -150,21 +259,20 @@ export default function UsersPage() {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-600 w-4 h-4" />
                   <input
                     type="text"
-                    placeholder="Search users by name, email, phone..."
+                    placeholder="Search admin users by name or email..."
                     value={searchTerm}
                     onChange={handleSearch}
                     className="pl-10 pr-4 py-3 border-2 border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-80 text-gray-900 placeholder-gray-500 shadow-md bg-white"
                   />
                 </div>
                 <select
-                  value={filterAuthProvider}
-                  onChange={(e) => setFilterAuthProvider(e.target.value)}
+                  value={filterRole}
+                  onChange={(e) => setFilterRole(e.target.value)}
                   className="px-4 py-3 border-2 border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 shadow-md bg-white"
                 >
-                  <option value="">All Auth Methods</option>
-                  <option value="google">Google</option>
-                  <option value="phone">Phone</option>
-                  <option value="email">Email</option>
+                  <option value="">All Roles</option>
+                  <option value="admin">Admin</option>
+                  <option value="superadmin">Super Admin</option>
                 </select>
                 <select
                   value={filterStatus}
@@ -182,32 +290,32 @@ export default function UsersPage() {
               </div>
               {searchTerm && (
                 <div className="text-sm text-gray-800 font-semibold bg-blue-100 px-4 py-2 rounded-lg">
-                  Found <span className="text-blue-700 font-bold">{totalItems}</span> user{totalItems !== 1 ? 's' : ''}
+                  Found <span className="text-blue-700 font-bold">{totalItems}</span> admin user{totalItems !== 1 ? 's' : ''}
                   <span className="text-gray-700 ml-2">for "{searchTerm}"</span>
                 </div>
               )}
             </div>
           </div>
-          
+
           {/* Table */}
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gradient-to-r from-blue-600 to-indigo-600">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
-                    User
+                    Admin User
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
-                    Auth Method
+                    Role
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
                     Status
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
-                    Last Login
+                    Created
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
-                    Created
+                    Last Login
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
                     Action
@@ -220,92 +328,66 @@ export default function UsersPage() {
                     <td colSpan="6" className="px-4 py-8 text-center text-gray-500">
                       <div className="flex items-center justify-center space-x-2">
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                        <span>Loading users...</span>
+                        <span>Loading admin users...</span>
                       </div>
                     </td>
                   </tr>
-                ) : users.length === 0 ? (
+                ) : adminUsers.length === 0 ? (
                   <tr>
                     <td colSpan="6" className="px-4 py-8 text-center text-gray-500">
                       <div className="flex flex-col items-center space-y-2">
                         <div className="text-gray-400">
-                          <User className="w-12 h-12 mx-auto" />
+                          <UserCog className="w-12 h-12 mx-auto" />
                         </div>
-                        <span className="text-lg font-medium">No users found</span>
+                        <span className="text-lg font-medium">No admin users found</span>
                         <span className="text-sm">
-                          {searchTerm ? `No users match "${searchTerm}"` : 'No users have registered yet'}
+                          {searchTerm ? `No admin users match "${searchTerm}"` : 'Start by adding your first admin user'}
                         </span>
                       </div>
                     </td>
                   </tr>
                 ) : (
-                  users.map((user) => (
+                  adminUsers.map((user) => (
                     <tr key={user._id} className="hover:bg-blue-50 transition-colors">
                       <td className="px-4 py-3 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="w-12 h-12 rounded-lg overflow-hidden ring-2 ring-blue-200 bg-blue-100 flex items-center justify-center">
-                            {user.photoURL ? (
-                              <img 
-                                src={user.photoURL} 
-                                alt={user.displayName}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  e.target.style.display = 'none';
-                                  e.target.nextSibling.style.display = 'flex';
-                                }}
-                              />
-                            ) : null}
-                            <div className="w-full h-full bg-blue-100 rounded-lg flex items-center justify-center" style={{ display: user.photoURL ? 'none' : 'flex' }}>
-                              <span className="text-sm font-semibold text-blue-600">
-                                {(user.displayName || '').split(' ').map(n => n[0]).join('')}
-                              </span>
-                            </div>
+                            <UserCog className="h-6 w-6 text-blue-600" />
                           </div>
                           <div className="ml-3">
-                            <div className="text-sm font-bold text-gray-900">{user.displayName}</div>
+                            <div className="text-sm font-bold text-gray-900">{user.name}</div>
                             <div className="text-xs text-gray-500 flex items-center gap-1">
-                              {user.email && (
-                                <>
-                                  <Mail className="h-3 w-3" />
-                                  {user.email}
-                                </>
-                              )}
-                              {user.phoneNumber && (
-                                <>
-                                  <Phone className="h-3 w-3 ml-2" />
-                                  {user.phoneNumber}
-                                </>
-                              )}
+                              <Mail className="h-3 w-3" />
+                              {user.email}
                             </div>
                           </div>
                         </div>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-800">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          user.authProvider === 'google' 
+                          user.role === 'superadmin' 
                             ? 'bg-red-100 text-red-800' 
-                            : user.authProvider === 'phone'
-                            ? 'bg-green-100 text-green-800'
                             : 'bg-blue-100 text-blue-800'
                         }`}>
                           <Shield className="h-3 w-3 mr-1" />
-                          {user.authProvider}
+                          {user.role}
                         </span>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-800">
                         <button
-                          onClick={() => handleToggleStatus(user._id, user.isActive, user.displayName)}
-                          className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                            user.isActive ? 'bg-green-600 focus:ring-green-500' : 'bg-gray-200 focus:ring-gray-500'
+                          onClick={() => handleToggleStatus(user._id, user.name, user.isActive)}
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer hover:opacity-80 transition-opacity ${
+                            user.isActive 
+                              ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                              : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                           }`}
-                          title={user.isActive ? 'Click to deactivate' : 'Click to activate'}
+                          title={`Click to ${user.isActive ? 'deactivate' : 'activate'} user`}
                         >
-                          <span
-                            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                              user.isActive ? 'translate-x-5' : 'translate-x-0'
-                            }`}
-                          />
+                          {user.isActive ? 'Active' : 'Inactive'}
                         </button>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-800">
+                        {new Date(user.createdAt).toLocaleDateString()}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-800">
                         {user.lastLogin 
@@ -313,14 +395,20 @@ export default function UsersPage() {
                           : "Never"
                         }
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-800">
-                        {new Date(user.createdAt).toLocaleDateString()}
-                      </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
                         <div className="flex items-center space-x-2">
-                          <button className="text-blue-600 hover:text-blue-700 p-2 rounded hover:bg-blue-50 transition-colors">
-                            <Eye className="w-4 h-4" />
+                          <button 
+                            onClick={() => handleDeleteAdminUser(user._id, user.name)}
+                            className="text-red-600 hover:text-red-700 p-2 rounded hover:bg-red-50 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
                           </button>
+                          <Link href={`/admin-users/edit/${user._id}`} className="text-green-600 hover:text-green-700 p-2 rounded hover:bg-green-50 transition-colors">
+                            <Edit className="w-4 h-4" />
+                          </Link>
+                          <Link href={`/admin-users/view/${user._id}`} className="text-blue-600 hover:text-blue-700 p-2 rounded hover:bg-blue-50 transition-colors">
+                            <Eye className="w-4 h-4" />
+                          </Link>
                         </div>
                       </td>
                     </tr>
@@ -345,4 +433,4 @@ export default function UsersPage() {
       </div>
     </Layout>
   )
-} 
+}

@@ -14,6 +14,7 @@ import {
 import Link from "next/link"
 import Swal from 'sweetalert2'
 import { useRouter } from 'next/navigation'
+import { isSuperadmin } from '@/lib/authUtils'
 
 export default function DoctorList() {
   const router = useRouter()
@@ -317,12 +318,14 @@ export default function DoctorList() {
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-2">
-                        <button 
-                          onClick={() => handleDeleteDoctor(doctor.id, doctor.name)}
-                          className="text-red-600 hover:text-red-700 p-2 rounded hover:bg-red-50 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {isSuperadmin() && (
+                          <button 
+                            onClick={() => handleDeleteDoctor(doctor.id, doctor.name)}
+                            className="text-red-600 hover:text-red-700 p-2 rounded hover:bg-red-50 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                         <Link href={`/doctors/edit/${doctor.id}`} className="text-green-600 hover:text-green-700 p-2 rounded hover:bg-green-50 transition-colors">
                           <Edit className="w-4 h-4" />
                         </Link>

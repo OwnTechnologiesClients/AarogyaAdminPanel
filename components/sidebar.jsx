@@ -15,7 +15,8 @@ import {
   ChevronRight,
   Circle,
   Menu,
-  X
+  X,
+  UserCog
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -64,9 +65,16 @@ const menuItems = [
     title: "Users",
     icon: Users,
     href: "/users",
-  
   },
-
+  {
+    title: "Admin Users",
+    icon: UserCog,
+    href: "/admin-users",
+    subItems: [
+      { title: "Add Admin User", href: "/admin-users/add" },
+      { title: "Admin Users List", href: "/admin-users" },
+    ]
+  },
   {
     title: "Logout",
     icon: LogOut,
@@ -78,6 +86,7 @@ export function Sidebar({ isOpen, onToggle }) {
   const [expandedItem, setExpandedItem] = useState(null)
   const [isMobile, setIsMobile] = useState(false)
   const [focusedIndex, setFocusedIndex] = useState(-1)
+  const [adminRole, setAdminRole] = useState('admin')
   const pathname = usePathname()
   const sidebarRef = useRef(null)
 
@@ -91,6 +100,16 @@ export function Sidebar({ isOpen, onToggle }) {
     window.addEventListener('resize', checkMobile)
     
     return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  useEffect(() => {
+    const role = localStorage.getItem('adminRole') || 'admin'
+    const token = localStorage.getItem('adminToken')
+    if (token) {
+      setAdminRole(role)
+    } else {
+      setAdminRole('admin')
+    }
   }, [])
 
   // Auto-expand the section containing the current active page
@@ -216,7 +235,12 @@ export function Sidebar({ isOpen, onToggle }) {
 
         {/* Navigation Menu */}
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto" role="menu">
-          {menuItems.map((item, index) => {
+          {menuItems.filter(item => {
+            if (item.title === "Admin Users" && adminRole !== 'superadmin') {
+              return false
+            }
+            return true
+          }).map((item, index) => {
             const Icon = item.icon
             const hasSubItems = item.subItems && item.subItems.length > 0
             const expanded = isExpanded(item.title)

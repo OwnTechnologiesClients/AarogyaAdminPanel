@@ -40,10 +40,12 @@ export default function LoginPage() {
       // Real API call
       const response = await api.post('/auth/login', formData)
       const { token, user } = response.data.data || {}
-      const name = user?.email || formData.email.split('@')[0] || 'Admin'
+      const name = user?.name || user?.email || formData.email.split('@')[0] || 'Admin'
+      const role = user?.role || 'admin'
       if (token) {
         localStorage.setItem('adminToken', token)
         localStorage.setItem('adminName', name)
+        localStorage.setItem('adminRole', role)
         router.push('/')
       } else {
         setError('Invalid response from server')

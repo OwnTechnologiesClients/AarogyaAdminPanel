@@ -38,6 +38,7 @@ export function Navbar({ onMenuToggle }) {
       // Clear authentication data
       localStorage.removeItem('adminToken')
       localStorage.removeItem('adminName')
+      localStorage.removeItem('adminRole')
       setIsLoggedIn(false)
       setAdminName("Admin")
       
