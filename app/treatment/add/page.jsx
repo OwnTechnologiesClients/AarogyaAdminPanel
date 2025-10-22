@@ -31,8 +31,10 @@ export default function AddTreatment() {
     recovery: '',
     topHospitals: [],
     hospitalSelectionHelp: '',
+    hospitalSelectionHelpArray: [],
     topDoctors: [],
     doctorSelectionHelp: '',
+    doctorSelectionHelpArray: [],
     diagnosticTools: [],
     advancedTreatmentOptions: [],
     advantages: [],
@@ -79,6 +81,18 @@ export default function AddTreatment() {
     setList(list.filter(i => i !== item))
   }
 
+  // Helper function to convert comma-separated string to array
+  const parseCommaSeparated = (value) => {
+    return value.split(',').map(item => item.trim()).filter(item => item.length > 0)
+  }
+
+  // Helper function to handle comma-separated input changes
+  const handleCommaSeparatedChange = (value, setValue, setArray) => {
+    setValue(value)
+    const parsedArray = parseCommaSeparated(value)
+    setArray(parsedArray)
+  }
+
   const submitTreatment = async () => {
     if (submitting) return
     // Basic validation
@@ -97,9 +111,9 @@ export default function AddTreatment() {
       fd.append('duration', formData.duration || '')
       fd.append('recovery', formData.recovery || '')
       fd.append('topHospitals', JSON.stringify(formData.topHospitals || []))
-      fd.append('hospitalSelectionHelp', formData.hospitalSelectionHelp || '')
+      fd.append('hospitalSelectionHelp', JSON.stringify(formData.hospitalSelectionHelpArray || []))
       fd.append('topDoctors', JSON.stringify(formData.topDoctors || []))
-      fd.append('doctorSelectionHelp', formData.doctorSelectionHelp || '')
+      fd.append('doctorSelectionHelp', JSON.stringify(formData.doctorSelectionHelpArray || []))
       fd.append('diagnosticTools', JSON.stringify(formData.diagnosticTools || []))
       fd.append('advancedTreatmentOptions', JSON.stringify(formData.advancedTreatmentOptions || []))
       fd.append('advantages', JSON.stringify(formData.advantages || []))
@@ -340,21 +354,53 @@ const TreatmentDetailsTab = ({ formData, setFormData, hospitals, doctors, goNext
               <label className="block text-sm font-medium text-gray-700">Hospital Selection Help</label>
                   <textarea 
                     rows="3"
-                placeholder="Enter criteria for hospital selection..." 
+                placeholder="Enter criteria for hospital selection (comma-separated)..." 
                 value={formData.hospitalSelectionHelp}
-                onChange={(e) => setFormData(prev => ({ ...prev, hospitalSelectionHelp: e.target.value }))}
+                onChange={(e) => handleCommaSeparatedChange(
+                  e.target.value, 
+                  (value) => setFormData(prev => ({ ...prev, hospitalSelectionHelp: value })),
+                  (array) => setFormData(prev => ({ ...prev, hospitalSelectionHelpArray: array }))
+                )}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 resize-none"
                   />
+                  {formData.hospitalSelectionHelpArray.length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-xs text-gray-600 font-medium mb-1">Parsed criteria:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {formData.hospitalSelectionHelpArray.map((item, index) => (
+                          <span key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
+                            {item}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">Doctor Selection Help</label>
                   <textarea 
                     rows="3"
-                placeholder="Enter criteria for doctor selection..." 
+                placeholder="Enter criteria for doctor selection (comma-separated)..." 
                 value={formData.doctorSelectionHelp}
-                onChange={(e) => setFormData(prev => ({ ...prev, doctorSelectionHelp: e.target.value }))}
+                onChange={(e) => handleCommaSeparatedChange(
+                  e.target.value, 
+                  (value) => setFormData(prev => ({ ...prev, doctorSelectionHelp: value })),
+                  (array) => setFormData(prev => ({ ...prev, doctorSelectionHelpArray: array }))
+                )}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 resize-none"
                   />
+                  {formData.doctorSelectionHelpArray.length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-xs text-gray-600 font-medium mb-1">Parsed criteria:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {formData.doctorSelectionHelpArray.map((item, index) => (
+                          <span key={index} className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">
+                            {item}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

@@ -68,7 +68,7 @@ export default function HospitalViewPage() {
           <div className="space-y-6">
             {/* Hospital Header */}
             <div className="bg-white rounded-xl border p-6">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-6">
                 <div className="w-24 h-24 rounded-lg overflow-hidden border bg-gray-100 flex items-center justify-center">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   {(() => {
@@ -87,11 +87,46 @@ export default function HospitalViewPage() {
                   )
                   })()}
                 </div>
-                <div>
+                
+                <div className="flex-1">
                   <h2 className="text-2xl font-bold text-gray-900">{data.name}</h2>
                   <p className="text-gray-600">{data.location}</p>
                   <p className="text-gray-800 font-semibold">User Score: {data.rating?.userScore ?? data.userScore ?? '-' } • Google: {data.rating?.googleRating ?? data.googleRating ?? '-'}</p>
                 </div>
+
+                {/* Record Information - Right Side */}
+                {(data.createdBy || data.createdAt || data.updatedBy || data.updatedAt) && (
+                  <div className="bg-gray-50 rounded-lg p-4 min-w-[280px]">
+                    <div className="space-y-2 text-sm">
+                      {data.createdBy && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-600 font-medium">Created By:</span>
+                          <span className="text-blue-600 font-semibold">
+                            {typeof data.createdBy === 'object' ? data.createdBy.name || data.createdBy.username : data.createdBy}
+                          </span>
+                          {data.createdAt && (
+                            <span className="text-gray-500 text-xs ml-2">
+                              on {new Date(data.createdAt).toLocaleDateString()}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      {data.updatedBy && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-600 font-medium">Updated By:</span>
+                          <span className="text-green-600 font-semibold">
+                            {typeof data.updatedBy === 'object' ? data.updatedBy.name || data.updatedBy.username : data.updatedBy}
+                          </span>
+                          {data.updatedAt && (
+                            <span className="text-gray-500 text-xs ml-2">
+                              on {new Date(data.updatedAt).toLocaleDateString()}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -355,6 +390,7 @@ export default function HospitalViewPage() {
                     )}
                   </div>
                 </div>
+
 
                 {/* Contact */}
                 <div className="bg-white rounded-xl border p-6">

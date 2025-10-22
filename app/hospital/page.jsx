@@ -1,10 +1,9 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useEffect } from "react"
 import HospitalApi from "@/lib/api/hospitalApi"
 import { Layout } from "@/components/layout"
 import { Pagination } from "@/components/ui/pagination"
-import { usePagination } from "@/lib/hooks/usePagination"
 import { 
   Search, 
   Trash2, 
@@ -19,20 +18,26 @@ export default function HospitalList() {
   const [searchTerm, setSearchTerm] = useState("")
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalItems, setTotalItems] = useState(0)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
 
-  // Filtering is handled by the API via the `search` query param
+  // Server-side pagination handlers
+  const handlePageChange = (page) => {
+    setCurrentPage(page)
+  }
 
-  // Use pagination hook
-  const {
-    currentPage,
-    totalPages,
-    totalItems,
-    itemsPerPage,
-    currentItems: currentHospitals,
-    handlePageChange,
-    handleItemsPerPageChange,
-    resetPagination
-  } = usePagination(items, 10)
+  const handleItemsPerPageChange = (newItemsPerPage, total = null, totalPages = null) => {
+    setItemsPerPage(newItemsPerPage)
+    setCurrentPage(1)
+    if (total !== null) setTotalItems(total)
+    if (totalPages !== null) setTotalPages(totalPages)
+  }
+
+  const resetPagination = () => {
+    setCurrentPage(1)
+  }
 
   const withBase = (p) => {
     if (!p) return ''
@@ -47,7 +52,8 @@ export default function HospitalList() {
         const data = await HospitalApi.list({ page: currentPage, limit: itemsPerPage, search: searchTerm })
         if (data?.success) {
           setItems(data.data || [])
-          handleItemsPerPageChange(itemsPerPage, data.total || 0, data.totalPages || 1)
+          setTotalItems(data.total || 0)
+          setTotalPages(data.totalPages || 1)
         }
       } catch (e) {
         console.error(e)
@@ -88,7 +94,8 @@ export default function HospitalList() {
       const data = await HospitalApi.list({ page: currentPage, limit: itemsPerPage, search: searchTerm })
       if (data?.success) {
         setItems(data.data || [])
-        handleItemsPerPageChange(itemsPerPage, data.total || 0, data.totalPages || 1)
+        setTotalItems(data.total || 0)
+        setTotalPages(data.totalPages || 1)
       }
     } catch (error) {
       await Swal.fire({
@@ -176,7 +183,7 @@ export default function HospitalList() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-blue-100">
-                {currentHospitals.map((hospital, index) => (
+                {items.map((hospital, index) => (
                   <tr key={index} className="hover:bg-blue-50 transition-colors">
                     <td className="px-4 py-3 whitespace-nowrap text-sm font-bold text-blue-700">
                       #{hospital.id}

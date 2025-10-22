@@ -38,7 +38,7 @@ function MyListPage() {
     handlePageChange,
     handleItemsPerPageChange,
     resetPagination
-  } = usePagination(filteredData, 8)
+  } = usePagination(filteredData, 10)
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value)

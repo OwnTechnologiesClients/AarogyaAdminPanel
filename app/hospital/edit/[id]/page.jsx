@@ -178,8 +178,11 @@ export default function EditHospitalPage() {
     setFormData(prev => ({ ...prev, gallery: updated }))
   }
 
-  const addGalleryItem = () => {
-    setFormData(prev => ({ ...prev, gallery: [...(prev.gallery || []), null] }))
+  const addGalleryItems = (files) => {
+    if (files && files.length > 0) {
+      const fileArray = Array.from(files)
+      setFormData(prev => ({ ...prev, gallery: [...(prev.gallery || []), ...fileArray] }))
+    }
   }
 
   const removeGalleryItem = (idx) => {
@@ -1085,88 +1088,86 @@ export default function EditHospitalPage() {
                 
                 {expandedSections.gallery && (
                   <div className="space-y-4">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      {(formData?.gallery || []).map((item, idx) => (
-                        <div key={idx} className="border border-gray-200 rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
-                          <div className="flex items-center justify-between mb-3">
-                            <h4 className="text-sm font-medium text-gray-700">Gallery Image #{idx + 1}</h4>
-                            <button 
-                              type="button" 
-                              onClick={() => removeGalleryItem(idx)} 
-                              className="text-red-600 hover:text-red-800 text-sm font-medium"
-                            >
-                              Remove
-                            </button>
-                          </div>
-                          
-                          <div className="space-y-3">
-                            <div className="space-y-1">
-                              <label className="block text-xs font-medium text-gray-600">Upload Image</label>
-                              <div className="flex items-center space-x-3">
-                                <div className="flex-1 relative">
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={(e) => updateGalleryItem(idx, e.target.files?.[0] || null)}
-                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                    id={`gallery-file-${idx}`}
-                                  />
-                                  <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
-                                    <div className="flex-1 px-3 py-2 text-sm text-gray-700 bg-white">
-                                      {item ? (typeof item === 'string' ? item.split('/').pop() : item.name) : 'No file chosen'}
-                                    </div>
-                                    {!item && (
-                                      <button
-                                        type="button"
-                                        onClick={() => document.getElementById(`gallery-file-${idx}`).click()}
-                                        className="px-4 py-2 bg-blue-50 text-blue-700 text-sm font-medium border-l border-gray-300 hover:bg-blue-100 transition-colors"
-                                      >
-                                        Browse
-                                      </button>
-                                    )}
-                                  </div>
-                                </div>
-                                
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={(e) => addGalleryItems(e.target.files)}
+                      className="hidden"
+                      id="gallery-files-multiple"
+                    />
+
+                    {/* Gallery Preview Grid or Empty State */}
+                    {(formData?.gallery || []).length > 0 ? (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                          {(formData?.gallery || []).map((item, idx) => (
+                            <div key={idx} className="relative border border-gray-200 rounded-lg overflow-hidden bg-white hover:shadow-md transition-shadow group">
+                              <div className="aspect-square relative">
                                 {galleryPreviews[idx] && (
-                                  <div className="w-16 h-16 rounded-md overflow-hidden border border-gray-200 bg-white flex-shrink-0">
-                                    <img src={galleryPreviews[idx]} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
+                                  <img 
+                                    src={galleryPreviews[idx]} 
+                                    alt={`Gallery ${idx + 1}`} 
+                                    className="w-full h-full object-cover" 
+                                  />
+                                )}
+                                
+                                {!galleryPreviews[idx] && typeof item === 'string' && item && (
+                                  <img 
+                                    src={item.startsWith('http') ? item : `http://localhost:5000${item}`} 
+                                    alt={`Gallery ${idx + 1}`} 
+                                    className="w-full h-full object-cover" 
+                                  />
+                                )}
+                                
+                                {!galleryPreviews[idx] && !item && (
+                                  <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                                    <Camera className="w-8 h-8 text-gray-400" />
                                   </div>
                                 )}
                                 
-                                {/* Show existing image if it's a URL string */}
-                                {!galleryPreviews[idx] && typeof item === 'string' && item && (
-                                  <div className="w-16 h-16 rounded-md overflow-hidden border border-gray-200 bg-white flex-shrink-0">
-                                    <img 
-                                      src={item.startsWith('http') ? item : `http://localhost:5000${item}`} 
-                                      alt={`Existing ${idx + 1}`} 
-                                      className="w-full h-full object-cover" 
-                                    />
-                                  </div>
-                                )}
+                                {/* Remove Button Overlay */}
+                                <button 
+                                  type="button" 
+                                  onClick={() => removeGalleryItem(idx)} 
+                                  className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                                  title="Remove image"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                              
+                              {/* Image Info */}
+                              <div className="p-2 bg-gray-50 border-t border-gray-200">
+                                <p className="text-xs text-gray-600 truncate">
+                                  {item ? (typeof item === 'string' ? item.split('/').pop() : item.name) : 'No file'}
+                                </p>
                               </div>
                             </div>
-                          </div>
+                          ))}
+                          
+                          {/* Add More Button */}
+                          <button
+                            type="button"
+                            onClick={() => document.getElementById('gallery-files-multiple').click()}
+                            className="aspect-square border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 hover:border-blue-400 transition-all flex flex-col items-center justify-center gap-2 cursor-pointer group"
+                          >
+                            <Plus className="w-8 h-8 text-gray-400 group-hover:text-blue-600 transition-colors" />
+                            <span className="text-xs text-gray-500 group-hover:text-blue-600 font-medium">Add More</span>
+                          </button>
                         </div>
-                      ))}
-                    </div>
-                    
-                    {(formData?.gallery || []).length === 0 && (
-                      <div className="text-center py-8 text-gray-500">
-                        <Camera className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                        <p className="text-sm">No gallery images added yet</p>
                       </div>
-                    )}
-                    
-                    <div className="mt-4">
-                      <button 
-                        type="button" 
-                        onClick={addGalleryItem} 
-                        className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm transition-colors w-full justify-center"
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => document.getElementById('gallery-files-multiple').click()}
+                        className="w-full text-center py-16 text-gray-500 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50/50 transition-all cursor-pointer group"
                       >
-                        <Plus className="w-4 h-4" />
-                        <span>Add Image</span>
+                        <Camera className="w-20 h-20 text-gray-300 group-hover:text-blue-500 mx-auto mb-4 transition-colors" />
+                        <p className="text-base font-medium text-gray-700 group-hover:text-blue-600">Click to add gallery images</p>
+                        <p className="text-sm mt-2 text-gray-500">You can select multiple images at once</p>
                       </button>
-                    </div>
+                    )}
                   </div>
                 )}
               </div>

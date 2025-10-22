@@ -102,6 +102,40 @@ export default function DoctorView({ params }) {
                   </div>
                 )}
               </div>
+
+              {/* Record Information - Right Side */}
+              {(data.createdBy || data.createdAt || data.updatedBy || data.updatedAt) && (
+                <div className="bg-gray-50 rounded-lg p-4 min-w-[280px]">
+                  <div className="space-y-2 text-sm">
+                    {data.createdBy && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-600 font-medium">Created By:</span>
+                        <span className="text-blue-600 font-semibold">
+                          {typeof data.createdBy === 'object' ? data.createdBy.name || data.createdBy.username : data.createdBy}
+                        </span>
+                        {data.createdAt && (
+                          <span className="text-gray-500 text-xs ml-2">
+                            on {new Date(data.createdAt).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    {data.updatedBy && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-600 font-medium">Updated By:</span>
+                        <span className="text-green-600 font-semibold">
+                          {typeof data.updatedBy === 'object' ? data.updatedBy.name || data.updatedBy.username : data.updatedBy}
+                        </span>
+                        {data.updatedAt && (
+                          <span className="text-gray-500 text-xs ml-2">
+                            on {new Date(data.updatedAt).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

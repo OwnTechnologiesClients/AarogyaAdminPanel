@@ -16,7 +16,8 @@ import {
   Circle,
   Menu,
   X,
-  UserCog
+  UserCog,
+  HeadphonesIcon
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -52,14 +53,14 @@ const menuItems = [
   },
 
   {
-    title: "Chat",
-    icon: MessageCircle,
-    href: "/chat",
-  },
-  {
     title: "Enquiry",
     icon: MessageCircle,
     href: "/enquiry",
+  },
+  {
+    title: "Support",
+    icon: HeadphonesIcon,
+    href: "/support",
   },
   {
     title: "Users",
@@ -217,9 +218,9 @@ export function Sidebar({ isOpen, onToggle }) {
       >
         {/* Header with Mobile Toggle */}
         <div className="flex items-center justify-between py-6 px-4 border-b border-gray-200">
-          <div className="flex items-center">
+          <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
             <Image src="/logo.png" alt="Aarogya Admin Logo" width={350} height={300} className="h-10  w-auto" priority />
-          </div>
+          </Link>
           {isMobile && (
             <Button
               variant="ghost"
