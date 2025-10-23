@@ -11,11 +11,8 @@ import {
   Phone,
   Shield,
   Calendar,
-  Eye,
-  ToggleLeft,
-  ToggleRight
+  Eye
 } from "lucide-react"
-import Swal from 'sweetalert2'
 import { useRouter } from 'next/navigation'
 
 export default function UsersPage() {
@@ -28,7 +25,6 @@ export default function UsersPage() {
   const [totalItems, setTotalItems] = useState(0)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [filterAuthProvider, setFilterAuthProvider] = useState("")
-  const [filterStatus, setFilterStatus] = useState("")
 
   // Server-side pagination handlers
   const handlePageChange = (page) => {
@@ -54,8 +50,7 @@ export default function UsersPage() {
           page: currentPage,
           limit: itemsPerPage,
           ...(searchTerm && { search: searchTerm }),
-          ...(filterAuthProvider && { authProvider: filterAuthProvider }),
-          ...(filterStatus && { isActive: filterStatus })
+          ...(filterAuthProvider && { authProvider: filterAuthProvider })
         })
 
         const response = await fetch(`http://localhost:5000/api/users?${params}`)
@@ -81,54 +76,11 @@ export default function UsersPage() {
       }
     }
     fetchData()
-  }, [currentPage, itemsPerPage, searchTerm, filterAuthProvider, filterStatus])
+  }, [currentPage, itemsPerPage, searchTerm, filterAuthProvider])
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value)
     resetPagination()
-  }
-
-  const handleToggleStatus = async (userId, currentStatus, userName) => {
-    const newStatus = !currentStatus
-    const statusText = newStatus ? 'Active' : 'Inactive'
-    
-    try {
-      const response = await fetch(`http://localhost:5000/api/users/${userId}/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ isActive: newStatus })
-      })
-      
-      if (response.ok) {
-        await Swal.fire({
-          title: 'Updated!',
-          text: `"${userName}" is now ${statusText}`,
-          icon: 'success',
-          timer: 1500,
-          showConfirmButton: false
-        })
-        
-        // Refresh the list
-        const data = await fetch(`http://localhost:5000/api/users?page=${currentPage}&limit=${itemsPerPage}&search=${searchTerm}`)
-        const result = await data.json()
-        if (result?.success) {
-          setUsers(result.data || [])
-          setTotalItems(result.pagination?.total || 0)
-          setTotalPages(result.pagination?.totalPages || 1)
-        }
-      } else {
-        throw new Error('Failed to update user status')
-      }
-    } catch (error) {
-      await Swal.fire({
-        title: 'Error!',
-        text: error?.message || 'Failed to update user status',
-        icon: 'error',
-        timer: 2000
-      })
-    }
   }
 
   return (
@@ -166,15 +118,6 @@ export default function UsersPage() {
                   <option value="phone">Phone</option>
                   <option value="email">Email</option>
                 </select>
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  className="px-4 py-3 border-2 border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 shadow-md bg-white"
-                >
-                  <option value="">All Status</option>
-                  <option value="true">Active</option>
-                  <option value="false">Inactive</option>
-                </select>
                 <button className="flex items-center space-x-2 px-4 py-3 border-2 border-blue-200 rounded-lg hover:bg-blue-50 hover:border-blue-400 transition-colors shadow-md bg-white">
                   <Filter className="w-4 h-4 text-blue-600" />
                   <span className="text-sm font-medium text-gray-900">Filter</span>
@@ -201,9 +144,6 @@ export default function UsersPage() {
                     Auth Method
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
                     Last Login
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
@@ -217,7 +157,7 @@ export default function UsersPage() {
               <tbody className="bg-white divide-y divide-blue-100">
                 {loading ? (
                   <tr>
-                    <td colSpan="6" className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan="5" className="px-4 py-8 text-center text-gray-500">
                       <div className="flex items-center justify-center space-x-2">
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                         <span>Loading users...</span>
@@ -226,7 +166,7 @@ export default function UsersPage() {
                   </tr>
                 ) : users.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan="5" className="px-4 py-8 text-center text-gray-500">
                       <div className="flex flex-col items-center space-y-2">
                         <div className="text-gray-400">
                           <User className="w-12 h-12 mx-auto" />
@@ -291,21 +231,6 @@ export default function UsersPage() {
                           <Shield className="h-3 w-3 mr-1" />
                           {user.authProvider}
                         </span>
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-800">
-                        <button
-                          onClick={() => handleToggleStatus(user._id, user.isActive, user.displayName)}
-                          className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                            user.isActive ? 'bg-green-600 focus:ring-green-500' : 'bg-gray-200 focus:ring-gray-500'
-                          }`}
-                          title={user.isActive ? 'Click to deactivate' : 'Click to activate'}
-                        >
-                          <span
-                            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                              user.isActive ? 'translate-x-5' : 'translate-x-0'
-                            }`}
-                          />
-                        </button>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-800">
                         {user.lastLogin 
