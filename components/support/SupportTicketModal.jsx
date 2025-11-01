@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X, Paperclip, User, MessageCircle, CheckCircle, Clock, AlertCircle, Download } from "lucide-react";
 import SupportApi from "@/lib/api/supportApi";
 import Swal from 'sweetalert2';
@@ -8,6 +8,14 @@ const SupportTicketModal = ({ ticket, onUpdate, onClose, mode = 'reply' }) => {
   const [replyMessage, setReplyMessage] = useState("");
   const [replyAttachment, setReplyAttachment] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -126,20 +134,18 @@ const SupportTicketModal = ({ ticket, onUpdate, onClose, mode = 'reply' }) => {
     setIsSubmitting(true);
 
     try {
-      console.log('Admin Modal - Updating ticket:', {
+      console.log('Admin Modal - Replying to ticket:', {
         ticketId: ticket.id,
-        status: 'resolved', // Automatically set to resolved when sending reply
         replyMessage: replyMessage,
         hasAttachment: !!replyAttachment
       });
       
-      const response = await SupportApi.update(ticket.id, {
-        status: 'resolved', // Automatically set to resolved when sending reply
+      const response = await SupportApi.reply(ticket.id, {
         replyMessage: replyMessage,
         attachment: replyAttachment
       });
 
-      console.log('Admin Modal - Update response:', response);
+      console.log('Admin Modal - Reply response:', response);
 
       if (response.success) {
         onUpdate(response.data);
@@ -147,7 +153,7 @@ const SupportTicketModal = ({ ticket, onUpdate, onClose, mode = 'reply' }) => {
         setReplyAttachment(null);
         Swal.fire({
           title: 'Success!',
-          text: 'Reply sent successfully! Ticket status changed to resolved.',
+          text: 'Reply sent successfully!',
           icon: 'success',
           confirmButtonText: 'OK'
         });
@@ -174,8 +180,8 @@ const SupportTicketModal = ({ ticket, onUpdate, onClose, mode = 'reply' }) => {
 
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+      <div className="bg-white rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col animate-slide-up">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
@@ -209,43 +215,86 @@ const SupportTicketModal = ({ ticket, onUpdate, onClose, mode = 'reply' }) => {
               </div>
             </div>
 
-            {/* Original Message - Only show in reply mode */}
+            {/* Original Message and Conversation - Only show in reply mode */}
             {mode === 'reply' && (
               <div className="flex-1 overflow-y-auto p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Original Message</h3>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="flex items-start gap-3 mb-3">
-                    <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
-                      <User className="w-4 h-4 text-gray-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-sm font-medium text-gray-900">
-                          {ticket.user.name}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {formatDate(ticket.createdAt)}
-                        </span>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Conversation</h3>
+                
+                {/* Original Message */}
+                <div className="mb-6">
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
+                        <User className="w-4 h-4 text-gray-600" />
                       </div>
-                      <div className="text-sm text-gray-700 whitespace-pre-wrap break-words overflow-wrap-anywhere">
-                        {ticket.message}
-                      </div>
-                      {ticket.attachment && (
-                        <div className="mt-3 flex items-center gap-2 text-sm text-blue-600">
-                          <Paperclip className="w-3 h-3" />
-                          <span className="break-all">{ticket.attachment.name || 'Attachment'}</span>
-                          <button 
-                            onClick={() => handleDownloadAttachment(ticket.attachment)}
-                            className="ml-2 text-blue-600 hover:text-blue-800"
-                            title="Download attachment"
-                          >
-                            <Download className="w-3 h-3" />
-                          </button>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-sm font-medium text-gray-900">
+                            {ticket.user.name}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {formatDate(ticket.createdAt)}
+                          </span>
                         </div>
-                      )}
+                        <div className="text-sm text-gray-700 whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                          {ticket.message}
+                        </div>
+                        {ticket.attachment && (
+                          <div className="mt-3 flex items-center gap-2 text-sm text-blue-600">
+                            <Paperclip className="w-3 h-3" />
+                            <span className="break-all">{ticket.attachment.name || 'Attachment'}</span>
+                            <button 
+                              onClick={() => handleDownloadAttachment(ticket.attachment)}
+                              className="ml-2 text-blue-600 hover:text-blue-800"
+                              title="Download attachment"
+                            >
+                              <Download className="w-3 h-3" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
+
+                {/* Previous Messages */}
+                {ticket.messages && ticket.messages.length > 0 && ticket.messages.map((msg, index) => (
+                  <div key={index} className="mb-6">
+                    <div className={`p-4 rounded-lg ${msg.senderType === 'admin' ? 'bg-blue-50' : 'bg-green-50'}`}>
+                      <div className="flex items-start gap-3 mb-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${msg.senderType === 'admin' ? 'bg-blue-500' : 'bg-green-500'}`}>
+                          <User className="w-4 h-4 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-sm font-medium text-gray-900">
+                              {msg.senderName || (msg.senderType === 'admin' ? 'Admin' : 'User')}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {formatDate(msg.createdAt)}
+                            </span>
+                          </div>
+                          <div className="text-sm text-gray-700 whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                            {msg.message}
+                          </div>
+                          {msg.attachment && (
+                            <div className="mt-3 flex items-center gap-2 text-sm text-blue-600">
+                              <Paperclip className="w-3 h-3" />
+                              <span className="break-all">{msg.attachment.name || 'Attachment'}</span>
+                              <button 
+                                onClick={() => handleDownloadAttachment(msg.attachment)}
+                                className="ml-2 text-blue-600 hover:text-blue-800"
+                                title="Download attachment"
+                              >
+                                <Download className="w-3 h-3" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
 
@@ -384,50 +433,49 @@ const SupportTicketModal = ({ ticket, onUpdate, onClose, mode = 'reply' }) => {
                     </div>
                   </div>
 
-                  {/* Admin Reply */}
-                  {ticket.reply && ticket.reply.message && (
-                    <div className="mb-6">
-                      <div className="bg-blue-50 p-4 rounded-lg">
-                        <div className="flex items-start gap-3 mb-3">
-                          <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                            <User className="w-4 h-4 text-white" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className="text-sm font-medium text-gray-900">
-                                {ticket.reply.adminName || 'Admin'}
-                              </span>
-                              <span className="text-xs text-gray-500">
-                                {ticket.reply.createdAt ? formatDate(ticket.reply.createdAt) : 'Recently'}
-                              </span>
+                  {/* All Messages */}
+                  {ticket.messages && ticket.messages.length > 0 ? (
+                    ticket.messages.map((msg, index) => (
+                      <div key={index} className="mb-6">
+                        <div className={`p-4 rounded-lg ${msg.senderType === 'admin' ? 'bg-blue-50' : 'bg-green-50'}`}>
+                          <div className="flex items-start gap-3 mb-3">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${msg.senderType === 'admin' ? 'bg-blue-500' : 'bg-green-500'}`}>
+                              <User className={`w-4 h-4 ${msg.senderType === 'admin' ? 'text-white' : 'text-white'}`} />
                             </div>
-                            <div className="text-sm text-gray-700 whitespace-pre-wrap break-words overflow-wrap-anywhere">
-                              {ticket.reply.message}
-                            </div>
-                            {ticket.reply.attachment && (
-                              <div className="mt-3 flex items-center gap-2 text-sm text-blue-600">
-                                <Paperclip className="w-3 h-3" />
-                                <span className="break-all">{ticket.reply.attachment.name || 'Attachment'}</span>
-                                <button 
-                                  onClick={() => handleDownloadAttachment(ticket.reply.attachment)}
-                                  className="ml-2 text-blue-600 hover:text-blue-800"
-                                  title="Download attachment"
-                                >
-                                  <Download className="w-3 h-3" />
-                                </button>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-sm font-medium text-gray-900">
+                                  {msg.senderName || (msg.senderType === 'admin' ? 'Admin' : 'User')}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  {formatDate(msg.createdAt)}
+                                </span>
                               </div>
-                            )}
+                              <div className="text-sm text-gray-700 whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                                {msg.message}
+                              </div>
+                              {msg.attachment && (
+                                <div className="mt-3 flex items-center gap-2 text-sm text-blue-600">
+                                  <Paperclip className="w-3 h-3" />
+                                  <span className="break-all">{msg.attachment.name || 'Attachment'}</span>
+                                  <button 
+                                    onClick={() => handleDownloadAttachment(msg.attachment)}
+                                    className="ml-2 text-blue-600 hover:text-blue-800"
+                                    title="Download attachment"
+                                  >
+                                    <Download className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  )}
-
-                  {/* No reply message */}
-                  {(!ticket.reply || !ticket.reply.message) && (
+                    ))
+                  ) : (
                     <div className="text-center text-gray-500 py-8">
                       <MessageCircle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                      <p className="text-sm">No admin reply yet</p>
+                      <p className="text-sm">No replies yet</p>
                     </div>
                   )}
                 </div>

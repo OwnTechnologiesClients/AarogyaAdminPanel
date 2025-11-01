@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, User, Mail, Phone, Calendar, FileText, Tag, Globe, Building2, Stethoscope, MapPin, Users } from 'lucide-react';
 
 // Add CSS animations
@@ -30,6 +30,18 @@ if (typeof document !== 'undefined') {
 }
 
 const EnquiryViewModal = ({ enquiry, isOpen, onClose }) => {
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
   if (!isOpen || !enquiry) return null;
 
   const formatDate = (dateString) => {

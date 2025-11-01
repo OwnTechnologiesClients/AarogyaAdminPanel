@@ -333,8 +333,8 @@ const DoctorDetailsTab = ({ formData, setFormData, hospitals, goNext }) => {
                 type="number" 
                 step="0.1"
                 min="0"
-                max="10"
-                placeholder="9.7" 
+                max="5"
+                placeholder="4.7" 
                 value={formData.rating}
                 onChange={(e) => setFormData(prev => ({ ...prev, rating: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"

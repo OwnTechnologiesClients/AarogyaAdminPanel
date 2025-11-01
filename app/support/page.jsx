@@ -352,12 +352,12 @@ const SupportPage = () => {
                           <button
                             onClick={() => handleViewTicket(ticket)}
                             className="text-blue-600 hover:text-blue-700 p-2 rounded hover:bg-blue-50 transition-colors"
-                            title={ticket.status === 'resolved' || (ticket.reply && ticket.reply.message) ? "View Conversation" : "View Ticket"}
+                            title="View Conversation"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                          {/* Only show reply button if ticket is not resolved and has no reply */}
-                          {ticket.status !== 'resolved' && (!ticket.reply || !ticket.reply.message) && (
+                          {/* Show reply button if ticket is pending */}
+                          {ticket.status === 'pending' && (
                             <button
                               onClick={() => handleReplyTicket(ticket)}
                               className="text-green-600 hover:text-green-700 p-2 rounded hover:bg-green-50 transition-colors"
@@ -395,7 +395,7 @@ const SupportPage = () => {
             ticket={selectedTicket}
             onUpdate={handleUpdateTicket}
             onClose={handleCloseModal}
-            mode={selectedTicket.status === 'resolved' || (selectedTicket.reply && selectedTicket.reply.message) ? 'view' : 'reply'}
+            mode={selectedTicket.status === 'pending' ? 'reply' : 'view'}
           />
         )}
       </div>
