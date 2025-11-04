@@ -299,7 +299,16 @@ export default function DoctorList() {
                       ⭐ {doctor.rating ?? '-'}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-700">
-                      {doctor.hospitalId?.name || '-'}
+                      {doctor.customHospitalName ? (
+                        <span>
+                          {doctor.customHospitalName}
+                          <span className="text-xs text-gray-500 italic ml-1"></span>
+                        </span>
+                      ) : doctor.hospitalId?.name ? (
+                        doctor.hospitalId.name
+                      ) : (
+                        '-'
+                      )}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <button

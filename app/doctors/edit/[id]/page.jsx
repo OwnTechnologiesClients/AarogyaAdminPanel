@@ -87,6 +87,7 @@ export default function EditDoctor({ params }) {
     DoctorApi.getById(id)
       .then(res => {
         const data = res.data || res
+        const hasCustomHospital = data.customHospitalName && !data.hospitalId
         setFormData({
           id: data.id || '',
           name: data.name || '',
@@ -97,7 +98,9 @@ export default function EditDoctor({ params }) {
           rating: data.rating || '',
           introduction: data.introduction || '',
           designation: data.designation || '',
-          hospitalId: data.hospitalId?._id || data.hospitalId || '',
+          hospitalId: hasCustomHospital ? '' : (data.hospitalId?._id || data.hospitalId || ''),
+          customHospitalName: data.customHospitalName || '',
+          useCustomHospital: hasCustomHospital,
           affiliatedHospitalIds: (data.affiliatedHospitalIds || []).map(h => h.name || h.id || h),
           professionalExperience: data.professionalExperience || [],
           specializations: data.specializations || [],
@@ -118,7 +121,7 @@ export default function EditDoctor({ params }) {
     setSaving(true)
     try {
       const fd = new FormData()
-      fd.append('id', formData.id || '')
+      // ID is auto-generated and not editable, so we don't send it
       fd.append('name', formData.name || '')
       fd.append('specialty', formData.specialty || '')
       fd.append('location', formData.location || '')
@@ -126,7 +129,11 @@ export default function EditDoctor({ params }) {
       fd.append('rating', formData.rating || '')
       fd.append('introduction', formData.introduction || '')
       fd.append('designation', formData.designation || '')
-      fd.append('hospitalId', formData.hospitalId || '')
+      if (formData.useCustomHospital && formData.customHospitalName) {
+        fd.append('customHospitalName', formData.customHospitalName)
+      } else {
+        fd.append('hospitalId', formData.hospitalId || '')
+      }
       fd.append('affiliatedHospitalIds', JSON.stringify(formData.affiliatedHospitalIds || []))
       fd.append('professionalExperience', JSON.stringify(formData.professionalExperience || []))
       fd.append('specializations', JSON.stringify(formData.specializations || []))
@@ -276,19 +283,15 @@ const DoctorDetailsEditTab = ({ formData, setFormData, hospitals, goNext }) => {
           <h3 className="text-lg font-medium text-gray-900 mb-4">Basic Information</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Doctor ID *</label>
+              <label className="block text-sm font-medium text-gray-700">Doctor ID</label>
               <input 
                 type="text" 
-                placeholder="e.g., DOC_001" 
                 value={formData.id}
-                onChange={(e) => {
-                  const value = e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, '');
-                  setFormData(prev => ({ ...prev, id: value }));
-                }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-                required
+                disabled
+                readOnly
+                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600 cursor-not-allowed"
               />
-              <p className="text-xs text-gray-500">Only letters, numbers, hyphens, and underscores allowed</p>
+              <p className="text-xs text-gray-500">Doctor ID is auto-generated and cannot be changed</p>
             </div>
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">Doctor Name *</label>
@@ -365,18 +368,47 @@ const DoctorDetailsEditTab = ({ formData, setFormData, hospitals, goNext }) => {
           <h3 className="text-lg font-medium text-gray-900 mb-4">Hospital Assignment</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Primary Hospital *</label>
-              <select
-                value={formData.hospitalId}
-                onChange={(e) => setFormData(prev => ({ ...prev, hospitalId: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-                required
-              >
-                <option value="">Select Hospital</option>
-                {hospitals.map(h => (
-                  <option key={h._id} value={h._id}>{h.name}</option>
-                ))}
-              </select>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">Primary Hospital *</label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.useCustomHospital}
+                    onChange={(e) => {
+                      setFormData(prev => ({
+                        ...prev,
+                        useCustomHospital: e.target.checked,
+                        hospitalId: e.target.checked ? '' : prev.hospitalId,
+                        customHospitalName: !e.target.checked ? '' : prev.customHospitalName
+                      }))
+                    }}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <span className="text-xs text-gray-600">Use custom hospital</span>
+                </label>
+              </div>
+              {formData.useCustomHospital ? (
+                <input
+                  type="text"
+                  value={formData.customHospitalName}
+                  onChange={(e) => setFormData(prev => ({ ...prev, customHospitalName: e.target.value }))}
+                  placeholder="Enter custom hospital name"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+                  required={formData.useCustomHospital}
+                />
+              ) : (
+                <select
+                  value={formData.hospitalId}
+                  onChange={(e) => setFormData(prev => ({ ...prev, hospitalId: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+                  required={!formData.useCustomHospital}
+                >
+                  <option value="">Select Hospital</option>
+                  {hospitals.map(h => (
+                    <option key={h._id} value={h._id}>{h.name}</option>
+                  ))}
+                </select>
+              )}
             </div>
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">Designation *</label>

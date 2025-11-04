@@ -72,10 +72,11 @@ export default function HospitalViewPage() {
                 <div className="w-24 h-24 rounded-lg overflow-hidden border bg-gray-100 flex items-center justify-center">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   {(() => {
-                    const headerImg = (Array.isArray(data.gallery) && data.gallery[0]) ? data.gallery[0] : data.image
-                    return headerImg ? (
+                    const headerImg = (Array.isArray(data.gallery) && data.gallery[0]) ? data.gallery[0] : null
+                    const headerImgUrl = headerImg ? withBase(headerImg) : null
+                    return headerImgUrl ? (
                     <img
-                      src={withBase(headerImg)}
+                      src={headerImgUrl}
                       alt={data.name}
                       className="w-full h-full object-cover"
                       loading="lazy"
@@ -140,9 +141,9 @@ export default function HospitalViewPage() {
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-800">
                     <div><span className="font-semibold text-gray-900">Hospital ID:</span> <span className="text-gray-800">{data.id}</span></div>
-                    <div><span className="font-semibold text-gray-900">Year Founded:</span> <span className="text-gray-800">{data.overview?.founded || data.established || '-'}</span></div>
+                    <div><span className="font-semibold text-gray-900">Year Founded:</span> <span className="text-gray-800">{data.overview?.founded || '-'}</span></div>
                     <div><span className="font-semibold text-gray-900">Annual Patients:</span> <span className="text-gray-800">{data.overview?.patients || '-'}</span></div>
-                    <div><span className="font-semibold text-gray-900">Total Doctors:</span> <span className="text-gray-800">{data.overview?.doctors || data.doctorsCount || '-'}</span></div>
+                    <div><span className="font-semibold text-gray-900">Total Doctors:</span> <span className="text-gray-800">{data.overview?.doctors || '-'}</span></div>
                     <div><span className="font-semibold text-gray-900">Operation Theaters:</span> <span className="text-gray-800">{data.overview?.sizeAndCapacity?.ot || '-'}</span></div>
                     <div><span className="font-semibold text-gray-900">ICU Beds:</span> <span className="text-gray-800">{data.overview?.sizeAndCapacity?.icu || '-'}</span></div>
                     <div><span className="font-semibold text-gray-900">Patient Beds:</span> <span className="text-gray-800">{data.overview?.sizeAndCapacity?.patientBeds || '-'}</span></div>
@@ -199,7 +200,6 @@ export default function HospitalViewPage() {
                       {(data.specialties || []).map((s, i) => (
                         <div key={i} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
                           <h4 className="font-semibold text-gray-900">{s?.name}</h4>
-                          {s?.rating && <p className="text-sm text-gray-600">Rating: {s.rating}/5</p>}
                           {s?.doctorsCount && <p className="text-sm text-gray-600">Doctors: {s.doctorsCount}</p>}
                           {s?.description && <p className="text-sm text-gray-700 mt-2">{s.description}</p>}
                           {s?.keyServices && s.keyServices.length > 0 && (
@@ -242,7 +242,7 @@ export default function HospitalViewPage() {
                             <div key={i} className="border border-gray-200 rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
                               <div className="flex items-start gap-4">
                                 <div className="w-16 h-16 rounded-lg overflow-hidden border bg-gray-100 flex items-center justify-center flex-shrink-0">
-                                  {doctor.image ? (
+                                  {doctor.image && withBase(doctor.image) ? (
                                     <img
                                       src={withBase(doctor.image)}
                                       alt={doctor.name}
@@ -303,7 +303,7 @@ export default function HospitalViewPage() {
                   >
                     <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-900">
                       <Building2 className="w-5 h-5 text-gray-900" />
-                      Hospital Features & Facilities ({(data.hospitalFeatures || data.features || []).length})
+                      Hospital Features & Facilities ({(data.hospitalFeatures || []).length})
                     </h3>
                     {expandedSections.features ? (
                       <ChevronUp className="w-5 h-5 text-gray-400" />
@@ -314,13 +314,13 @@ export default function HospitalViewPage() {
                   
                   {expandedSections.features && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {(data.hospitalFeatures || data.features || []).map((f, i) => (
+                      {(data.hospitalFeatures || []).map((f, i) => (
                         <div key={i} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
                           <h4 className="font-semibold text-gray-900">{f?.name}</h4>
                           {f?.description && <p className="text-sm text-gray-700 mt-2">{f.description}</p>}
                         </div>
                       ))}
-                      {(!data.hospitalFeatures && !data.features) && (
+                      {(!data.hospitalFeatures || data.hospitalFeatures.length === 0) && (
                         <p className="text-gray-500">No features available</p>
                       )}
                     </div>
@@ -376,8 +376,8 @@ export default function HospitalViewPage() {
                   <h3 className="text-lg font-semibold mb-4 text-gray-900">Quick Info</h3>
                   <div className="text-sm text-gray-800 space-y-2">
                     <div><span className="font-semibold">ID:</span> {data.id}</div>
-                    <div><span className="font-semibold">Established:</span> {data.overview?.founded || data.established || '-'}</div>
-                    <div><span className="font-semibold">Doctors:</span> {data.overview?.doctors || data.doctorsCount || '-'}</div>
+                    <div><span className="font-semibold">Established:</span> {data.overview?.founded || '-'}</div>
+                    <div><span className="font-semibold">Doctors:</span> {data.overview?.doctors || '-'}</div>
                     <div><span className="font-semibold">Accreditation:</span> {(data.accreditation||[]).join(', ') || '-'}</div>
                     {data.overview?.clinicType && data.overview.clinicType.length > 0 && (
                       <div><span className="font-semibold">Clinic Type:</span> {data.overview.clinicType.join(', ')}</div>
@@ -399,10 +399,7 @@ export default function HospitalViewPage() {
                     Contact Information
                   </h3>
                   <div className="text-sm text-gray-800 space-y-2">
-                    <div><span className="font-semibold">Phone:</span> {data.contact?.phone || '-'}</div>
-                    <div><span className="font-semibold">Email:</span> {data.contact?.email || '-'}</div>
                     <div><span className="font-semibold">Website:</span> {data.contact?.website || '-'}</div>
-                    <div><span className="font-semibold">Emergency:</span> {data.contact?.emergency || '-'}</div>
                     {data.contact?.address && (
                       <div className="mt-3">
                         <span className="font-semibold">Address:</span>
@@ -432,12 +429,15 @@ export default function HospitalViewPage() {
                     
                     {expandedSections.gallery && (
                       <div className="grid grid-cols-2 gap-4">
-                        {data.gallery.map((img, i) => (
-                          <div key={i} className="aspect-square rounded-lg overflow-hidden border">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={withBase(img)} alt={`Gallery ${i + 1}`} className="w-full h-full object-cover" />
-                          </div>
-                        ))}
+                        {data.gallery.map((img, i) => {
+                          const imgUrl = withBase(img);
+                          return imgUrl ? (
+                            <div key={i} className="aspect-square rounded-lg overflow-hidden border">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={imgUrl} alt={`Gallery ${i + 1}`} className="w-full h-full object-cover" />
+                            </div>
+                          ) : null;
+                        })}
                       </div>
                     )}
                   </div>

@@ -168,7 +168,15 @@ export default function DoctorView({ params }) {
                 Hospital Affiliation
               </h3>
               <div className="space-y-4">
-                {data.hospitalId ? (
+                {data.customHospitalName ? (
+                  <div>
+                    <span className="font-medium text-gray-700">Primary Hospital:</span>
+                    <div className="mt-1 p-3 bg-white rounded-lg border">
+                      <div className="font-medium text-gray-900">{data.customHospitalName}</div>
+                      <span className="text-xs text-gray-500 italic">(Custom Hospital)</span>
+                    </div>
+                  </div>
+                ) : data.hospitalId ? (
                   <div>
                     <span className="font-medium text-gray-700">Primary Hospital:</span>
                     <div className="mt-1 p-3 bg-white rounded-lg border">
@@ -184,7 +192,7 @@ export default function DoctorView({ params }) {
                     <div className="mt-2 space-y-2">
                       {data.affiliatedHospitalIds.map((hospital, idx) => (
                         <div key={idx} className="p-3 bg-white rounded-lg border">
-                          <div className="font-medium text-gray-900">{hospital.name || hospital}</div>
+                          <div className="font-medium text-gray-900">{typeof hospital === 'string' ? hospital : hospital.name || hospital}</div>
                         </div>
                       ))}
                     </div>

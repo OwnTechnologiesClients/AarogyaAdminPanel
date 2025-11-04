@@ -192,6 +192,7 @@ export default function AddTreatment() {
               hospitals={hospitals}
               doctors={doctors}
               goNext={goNext}
+              handleCommaSeparatedChange={handleCommaSeparatedChange}
             />
           </div>
           <div className={activeTab === 'profile-bio' ? 'block' : 'hidden'}>
@@ -215,7 +216,7 @@ export default function AddTreatment() {
 } 
 
 // Treatment Details Tab Component
-const TreatmentDetailsTab = ({ formData, setFormData, hospitals, doctors, goNext }) => {
+const TreatmentDetailsTab = ({ formData, setFormData, hospitals, doctors, goNext, handleCommaSeparatedChange }) => {
   const [imagePreview, setImagePreview] = useState(null);
 
   const handleImageChange = (e) => {

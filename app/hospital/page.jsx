@@ -107,6 +107,47 @@ export default function HospitalList() {
     }
   }
 
+  const handleDeleteHospital = async (hospitalId, hospitalName) => {
+    const Swal = (await import('sweetalert2')).default
+    
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: `You are about to delete hospital "${hospitalName}". This action cannot be undone!`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel'
+    })
+
+    if (result.isConfirmed) {
+      try {
+        await HospitalApi.remove(hospitalId)
+        await Swal.fire({
+          title: 'Deleted!',
+          text: 'Hospital has been deleted successfully.',
+          icon: 'success',
+          confirmButtonText: 'OK'
+        })
+        // Refresh the list
+        const data = await HospitalApi.list({ page: currentPage, limit: itemsPerPage, search: searchTerm })
+        if (data?.success) {
+          setItems(data.data || [])
+          setTotalItems(data.total || 0)
+          setTotalPages(data.totalPages || 1)
+        }
+      } catch (error) {
+        await Swal.fire({
+          title: 'Error!',
+          text: error?.response?.data?.message || 'Failed to delete hospital',
+          icon: 'error',
+          confirmButtonText: 'OK'
+        })
+      }
+    }
+  }
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -191,17 +232,19 @@ export default function HospitalList() {
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="w-12 h-12 rounded-lg overflow-hidden ring-2 ring-blue-200">
-                          <img 
-                            src={withBase(hospital.displayImage || hospital.gallery?.[0])} 
-                            alt={hospital.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              // Fallback to initials if image fails to load
-                              e.target.style.display = 'none';
-                              e.target.nextSibling.style.display = 'flex';
-                            }}
-                          />
-                          <div className="w-full h-full bg-blue-100 rounded-lg flex items-center justify-center hidden">
+                          {withBase(hospital.displayImage || hospital.gallery?.[0]) ? (
+                            <img 
+                              src={withBase(hospital.displayImage || hospital.gallery?.[0])} 
+                              alt={hospital.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                // Fallback to initials if image fails to load
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          <div className={`w-full h-full bg-blue-100 rounded-lg flex items-center justify-center ${withBase(hospital.displayImage || hospital.gallery?.[0]) ? 'hidden' : 'flex'}`}>
                             <span className="text-sm font-semibold text-blue-600">
                               {(hospital.name || '').split(' ').map(n => n[0]).join('')}
                             </span>
@@ -243,7 +286,11 @@ export default function HospitalList() {
                     <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-2">
                         {isSuperadmin() && (
-                          <button className="text-red-600 hover:text-red-700 p-2 rounded hover:bg-red-50 transition-colors">
+                          <button 
+                            onClick={() => handleDeleteHospital(hospital.id, hospital.name)}
+                            className="text-red-600 hover:text-red-700 p-2 rounded hover:bg-red-50 transition-colors"
+                            title="Delete hospital"
+                          >
                             <Trash2 className="w-4 h-4" />
                           </button>
                         )}
