@@ -47,10 +47,10 @@ export function Pagination({
           onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
           className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
         >
-          <option value={8}>8 Records Per Page</option>
-          <option value={16}>16 Records Per Page</option>
-          <option value={24}>24 Records Per Page</option>
-          <option value={32}>32 Records Per Page</option>
+          <option value={10}>10 Records Per Page</option>
+          <option value={20}>20 Records Per Page</option>
+          <option value={30}>30 Records Per Page</option>
+          <option value={50}>50 Records Per Page</option>
         </select>
       </div>
       

@@ -15,75 +15,66 @@ import {
   ChevronRight,
   Circle,
   Menu,
-  X
+  X,
+  UserCog,
+  HeadphonesIcon
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
 
 const menuItems = [
+   {
+    title: "Hospital Dashboard",
+    icon: Building2,
+    href: "/hospital",
+    subItems: [
+      { title: "Add Hospital", href: "/hospital/add" },
+      { title: "Hospital List", href: "/hospital" },
+    ]
+  },
   {
     title: "Doctors Dashboard",
     icon: Stethoscope,
     href: "/doctors",
     subItems: [
-      { title: "Doctors Dashboard", href: "/doctors" },
-      { title: "Doctors List", href: "/doctors/list" },
-      { title: "Doctors Card", href: "/doctors/card" },
-      { title: "Doctor Profile", href: "/doctors/profile" },
       { title: "Add Doctor", href: "/doctors/add" },
-      { title: "Edit Doctor", href: "/doctors/edit" },
+      { title: "Doctors List", href: "/doctors" },
     ]
   },
   {
-    title: "Patients Dashboard",
+    title: "Treatment Dashboard",
     icon: Users,
-    href: "/patients",
+    href: "/treatment",
     subItems: [
-      { title: "Patients Dashboard", href: "/patients" },
-      { title: "Patients List", href: "/patients/list" },
-      { title: "Add Patient", href: "/patients/add" },
-      { title: "Edit Patient Details", href: "/patients/edit" },
+      { title: "Add Treatment", href: "/treatment/add" },
+      { title: "Treatments List", href: "/treatment" },
     ]
   },
+
   {
-    title: "Hospital Dashboard",
-    icon: Building2,
-    href: "/hospital",
-    subItems: [
-      { title: "Hospital Dashboard", href: "/hospital" },
-      { title: "Doctors", href: "/hospital/doctors" },
-      { title: "Employees", href: "/hospital/employees" },
-      { title: "Attendance", href: "/hospital/attendance" },
-      { title: "Leaves", href: "/hospital/leaves" },
-      { title: "Salary", href: "/hospital/salary" },
-      { title: "Department", href: "/hospital/departments" },
-      { title: "Services", href: "/hospital/services" },
-      { title: "Role Access", href: "/hospital/role-access" },
-      { title: "Holidays", href: "/hospital/holidays" },
-      { title: "My Activities", href: "/hospital/my-activities" },
-    ]
-  },
-  {
-    title: "Appointments",
-    icon: Calendar,
-    href: "/appointments",
-    subItems: [
-      { title: "Appointments", href: "/appointments" },
-      { title: "Appointment List", href: "/appointments/list" },
-      { title: "Book Appointment", href: "/appointments/book" },
-      { title: "Edit Appointment", href: "/appointments/edit" },
-    ]
-  },
-  {
-    title: "Chat",
+    title: "Enquiry",
     icon: MessageCircle,
-    href: "/chat",
+    href: "/enquiry",
   },
   {
-    title: "Notification",
-    icon: Bell,
-    href: "/notifications",
+    title: "Support",
+    icon: HeadphonesIcon,
+    href: "/support",
+  },
+  {
+    title: "Users",
+    icon: Users,
+    href: "/users",
+  },
+  {
+    title: "Admin Users",
+    icon: UserCog,
+    href: "/admin-users",
+    subItems: [
+      { title: "Add Admin User", href: "/admin-users/add" },
+      { title: "Admin Users List", href: "/admin-users" },
+    ]
   },
   {
     title: "Logout",
@@ -96,6 +87,7 @@ export function Sidebar({ isOpen, onToggle }) {
   const [expandedItem, setExpandedItem] = useState(null)
   const [isMobile, setIsMobile] = useState(false)
   const [focusedIndex, setFocusedIndex] = useState(-1)
+  const [adminRole, setAdminRole] = useState('admin')
   const pathname = usePathname()
   const sidebarRef = useRef(null)
 
@@ -111,10 +103,20 @@ export function Sidebar({ isOpen, onToggle }) {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
+  useEffect(() => {
+    const role = localStorage.getItem('adminRole') || 'admin'
+    const token = localStorage.getItem('adminToken')
+    if (token) {
+      setAdminRole(role)
+    } else {
+      setAdminRole('admin')
+    }
+  }, [])
+
   // Auto-expand the section containing the current active page
   useEffect(() => {
     const currentMenuItem = menuItems.find(item => 
-      item.subItems && item.subItems.some(subItem => isActive(subItem.href))
+      item.subItems && item.subItems.some(subItem => isExactActive(subItem.href))
     )
     
     if (currentMenuItem) {
@@ -172,7 +174,10 @@ export function Sidebar({ isOpen, onToggle }) {
   }
 
   const isExpanded = (title) => expandedItem === title
-  const isActive = (href) => pathname === href || pathname.startsWith(href + "/")
+  // Parent items active when current path is under their section
+  const isParentActive = (href) => pathname === href || pathname.startsWith(href + "/")
+  // Exact match for sub items
+  const isExactActive = (href) => pathname === href
 
   // Close mobile sidebar when clicking on a link
   const handleLinkClick = () => {
@@ -186,8 +191,7 @@ export function Sidebar({ isOpen, onToggle }) {
       {/* Mobile Overlay */}
       {isMobile && isOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={onToggle}
+          className="fixed inset-0 bg-black bg-opacity-10 z-20 lg:hidden pointer-events-none"
           aria-hidden="true"
         />
       )}
@@ -196,18 +200,27 @@ export function Sidebar({ isOpen, onToggle }) {
       <aside 
         ref={sidebarRef}
         className={cn(
-          "fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 h-screen flex flex-col transform transition-transform duration-300 ease-in-out",
+          "fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 h-screen flex flex-col transform transition-transform duration-300 ease-in-out shadow-xl",
           isMobile && !isOpen && "-translate-x-full",
-          "lg:translate-x-0"
+          "lg:translate-x-0 lg:shadow-none"
         )}
         role="navigation"
         aria-label="Main navigation"
+        style={{
+          WebkitOverflowScrolling: 'touch'
+        }}
+        onClick={(e) => {
+          // Close sidebar when clicking on the sidebar background (not on menu items)
+          if (isMobile && e.target === e.currentTarget) {
+            onToggle()
+          }
+        }}
       >
         {/* Header with Mobile Toggle */}
         <div className="flex items-center justify-between py-6 px-4 border-b border-gray-200">
-          <div className="flex items-center">
-            <Image src="/logo.png" alt="Aarogya Admin Logo" width={350} height={300} className="h-10  w-auto" />
-          </div>
+          <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
+            <Image src="/logo.png" alt="Aarogya Admin Logo" width={350} height={300} className="h-10  w-auto" priority />
+          </Link>
           {isMobile && (
             <Button
               variant="ghost"
@@ -223,11 +236,16 @@ export function Sidebar({ isOpen, onToggle }) {
 
         {/* Navigation Menu */}
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto" role="menu">
-          {menuItems.map((item, index) => {
+          {menuItems.filter(item => {
+            if (item.title === "Admin Users" && adminRole !== 'superadmin') {
+              return false
+            }
+            return true
+          }).map((item, index) => {
             const Icon = item.icon
             const hasSubItems = item.subItems && item.subItems.length > 0
             const expanded = isExpanded(item.title)
-            const active = isActive(item.href)
+            const active = isParentActive(item.href)
 
             return (
               <div key={item.title}>
@@ -287,7 +305,7 @@ export function Sidebar({ isOpen, onToggle }) {
                   >
                     <div className="ml-6 mt-2 space-y-1 max-h-80 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                       {item.subItems.map((subItem) => {
-                        const subActive = isActive(subItem.href)
+                        const subActive = pathname === subItem.href
                         return (
                           <Link
                             key={subItem.title}
