@@ -5,6 +5,7 @@ import { Menu, UserCircle, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useRouter, usePathname } from "next/navigation"
+import Swal from 'sweetalert2'
 
 export function Navbar({ onMenuToggle }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -32,18 +33,40 @@ export function Navbar({ onMenuToggle }) {
     checkAuthStatus()
   }, [pathname])
 
-  const handleLogout = () => {
-    // Show confirmation dialog
-    if (window.confirm('Are you sure you want to logout?')) {
+  const handleLogout = async () => {
+    // Show confirmation dialog using SweetAlert
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: 'Do you want to logout from your account?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#04CE78',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, logout',
+      cancelButtonText: 'Cancel'
+    })
+
+    if (result.isConfirmed) {
       // Clear authentication data
       localStorage.removeItem('adminToken')
       localStorage.removeItem('adminName')
       localStorage.removeItem('adminRole')
+      localStorage.removeItem('token')
       setIsLoggedIn(false)
       setAdminName("Admin")
       
-      // Redirect to home page
-      router.push('/')
+      window.dispatchEvent(new Event('localStorageChange'))
+      
+      // Show success message
+      Swal.fire({
+        title: 'Logged Out!',
+        text: 'You have been successfully logged out.',
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false
+      }).then(() => {
+        router.push('/login')
+      })
     }
   }
 
