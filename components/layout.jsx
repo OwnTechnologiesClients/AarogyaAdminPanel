@@ -4,19 +4,62 @@ import { useState, useEffect } from "react"
 import { Navbar } from "@/components/navbar"
 import { Sidebar } from "@/components/sidebar"
 import { Breadcrumb } from "@/components/breadcrumb"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 
 export function Layout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isChecking, setIsChecking] = useState(true)
   const router = useRouter()
+  const pathname = usePathname()
 
   // Authentication check: redirect to /login if not logged in
   useEffect(() => {
-    const token = localStorage.getItem('token') || localStorage.getItem('adminToken')
-    if (!token) {
-      router.replace('/login')
+    const checkAuth = () => {
+      const token = localStorage.getItem('adminToken') || localStorage.getItem('token')
+      
+      if (!token) {
+        setIsAuthenticated(false)
+        setIsChecking(false)
+        // Only redirect if not already on login page
+        if (pathname !== '/login') {
+          router.replace('/login')
+        }
+        return
+      }
+      
+      setIsAuthenticated(true)
+      setIsChecking(false)
     }
-  }, [router])
+
+    checkAuth()
+    
+    // Also check on pathname changes
+    if (pathname !== '/login') {
+      checkAuth()
+    }
+
+    // Listen for storage changes (e.g., logout in another tab)
+    const handleStorageChange = (e) => {
+      if (e.key === 'adminToken' || e.key === 'token') {
+        checkAuth()
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+
+    // Also listen for custom storage events (for same-tab logout)
+    const handleCustomStorageChange = () => {
+      checkAuth()
+    }
+
+    window.addEventListener('localStorageChange', handleCustomStorageChange)
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      window.removeEventListener('localStorageChange', handleCustomStorageChange)
+    }
+  }, [router, pathname])
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen)
@@ -34,6 +77,23 @@ export function Layout({ children }) {
       document.body.style.overflow = 'unset'
     }
   }, [sidebarOpen])
+
+  // Show loading state while checking authentication
+  if (isChecking) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#04CE78] mx-auto mb-4"></div>
+          <p className="text-gray-600">Checking authentication...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render protected layout if not authenticated
+  if (!isAuthenticated && pathname !== '/login') {
+    return null
+  }
 
   return (
     <div className="flex h-screen bg-gray-50 relative">

@@ -10,7 +10,6 @@ import {
   Calendar, 
   MessageCircle, 
   Bell, 
-  LogOut,
   ChevronDown,
   ChevronRight,
   Circle,
@@ -75,11 +74,6 @@ const menuItems = [
       { title: "Add Admin User", href: "/admin-users/add" },
       { title: "Admin Users List", href: "/admin-users" },
     ]
-  },
-  {
-    title: "Logout",
-    icon: LogOut,
-    href: "/logout",
   },
 ]
 

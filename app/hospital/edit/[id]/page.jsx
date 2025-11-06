@@ -334,6 +334,13 @@ export default function EditHospitalPage() {
       })
       if (e?.response?.status === 401) {
         localStorage.removeItem('adminToken')
+        localStorage.removeItem('token')
+        localStorage.removeItem('adminName')
+        localStorage.removeItem('adminRole')
+        // Dispatch custom event to notify Layout component
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('localStorageChange'))
+        }
         router.push('/login')
       }
     }
