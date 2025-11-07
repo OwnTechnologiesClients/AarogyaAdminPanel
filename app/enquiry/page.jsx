@@ -7,6 +7,7 @@ import { Pagination } from '@/components/ui/pagination';
 import { Search, Filter, Eye } from 'lucide-react';
 import enquiryApi from '@/lib/api/enquiryApi';
 import EnquiryViewModal from '@/components/ui/EnquiryViewModal';
+import { API_BASE_URL, BACKEND_URL } from '@/lib/config';
 
 export default function EnquiryPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -139,8 +140,8 @@ export default function EnquiryPage() {
               <p><strong>To fix this:</strong></p>
               <ol className="list-decimal list-inside mt-2 space-y-1">
                 <li>Make sure the backend is running: <code className="bg-gray-100 px-2 py-1 rounded">cd AarogyaBackend && npm start</code></li>
-                <li>Check if backend is accessible at: <code className="bg-gray-100 px-2 py-1 rounded">http://localhost:5000</code></li>
-                <li>Verify the API endpoint: <code className="bg-gray-100 px-2 py-1 rounded">http://localhost:5000/api/enquiries</code></li>
+                <li>Check if backend is accessible at: <code className="bg-gray-100 px-2 py-1 rounded">{BACKEND_URL}</code></li>
+                <li>Verify the API endpoint: <code className="bg-gray-100 px-2 py-1 rounded">{`${API_BASE_URL}/enquiries`}</code></li>
               </ol>
             </div>
             <button 

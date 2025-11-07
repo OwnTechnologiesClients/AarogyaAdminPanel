@@ -17,6 +17,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import Swal from 'sweetalert2'
+import { API_BASE_URL } from "@/lib/config"
 
 export default function AddAdminUserPage() {
   const router = useRouter()
@@ -93,7 +94,7 @@ export default function AddAdminUserPage() {
 
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch("http://localhost:5000/api/admin/users", {
+      const response = await fetch(`${API_BASE_URL}/admin/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

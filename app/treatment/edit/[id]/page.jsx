@@ -10,6 +10,7 @@ import { Stethoscope, User, Building2, Star, Clock, DollarSign, Camera, ChevronD
 import { useRouter } from 'next/navigation'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import { resolveBackendPath } from '@/lib/config'
 
 export default function EditTreatment({ params }) {
   const router = useRouter()
@@ -225,7 +226,7 @@ const TreatmentDetailsEditTab = ({ formData, setFormData, hospitals, doctors, go
   const getCurrentImageSrc = () => {
     if (imagePreview) return imagePreview;
     if (formData.image && typeof formData.image === 'string') {
-      return formData.image.startsWith('http') ? formData.image : `http://localhost:5000${formData.image}`;
+      return resolveBackendPath(formData.image);
     }
     return null;
   };
@@ -445,11 +446,8 @@ const ProfileBioEditTab = ({
   }
 
   const getCurrentImageSrc = () => {
-    if (formData?.image) {
-      if (formData.image.startsWith('http')) {
-        return formData.image
-      }
-      return `http://localhost:5000${formData.image}`
+    if (formData?.image && typeof formData.image === 'string') {
+      return resolveBackendPath(formData.image)
     }
     return null
   }

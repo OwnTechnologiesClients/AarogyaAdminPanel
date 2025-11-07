@@ -15,6 +15,7 @@ import Link from "next/link"
 import Swal from 'sweetalert2'
 import { useRouter } from 'next/navigation'
 import { isSuperadmin } from '@/lib/authUtils'
+import { resolveBackendPath, BACKEND_URL } from "@/lib/config"
 
 export default function DoctorList() {
   const router = useRouter()
@@ -42,11 +43,7 @@ export default function DoctorList() {
     setCurrentPage(1)
   }
 
-  const withBase = (p) => {
-    if (!p) return ''
-    if (p.startsWith('http')) return p
-    return `http://localhost:5000${p}`
-  }
+  const withBase = (p) => resolveBackendPath(p)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -67,7 +64,7 @@ export default function DoctorList() {
         if (e.response?.status === 404) {
           console.error('API endpoint not found. Make sure the backend is running.')
         } else if (e.code === 'ECONNREFUSED') {
-          console.error('Cannot connect to backend server. Make sure it\'s running on http://localhost:5000')
+          console.error(`Cannot connect to backend server. Make sure it's running on ${BACKEND_URL}`)
         }
       } finally {
         setLoading(false)

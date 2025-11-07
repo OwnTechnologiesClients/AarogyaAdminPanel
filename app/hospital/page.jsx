@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { isSuperadmin } from '@/lib/authUtils'
+import { resolveBackendPath } from "@/lib/config"
 
 export default function HospitalList() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -39,11 +40,7 @@ export default function HospitalList() {
     setCurrentPage(1)
   }
 
-  const withBase = (p) => {
-    if (!p) return ''
-    if (p.startsWith('http')) return p
-    return `http://localhost:5000${p}`
-  }
+  const withBase = (p) => resolveBackendPath(p)
 
   useEffect(() => {
     const fetchData = async () => {

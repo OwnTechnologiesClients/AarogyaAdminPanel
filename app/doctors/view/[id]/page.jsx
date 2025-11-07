@@ -5,6 +5,7 @@ import DoctorApi from '@/lib/api/doctorApi'
 import { Layout } from '@/components/layout'
 import Link from 'next/link'
 import { Building2, Star, Users, Bed, Calendar, Mail, Phone, Globe, MapPin, Award, Info, Navigation, Stethoscope, Microscope, Camera, ChevronDown, ChevronUp } from "lucide-react"
+import { resolveBackendPath } from '@/lib/config'
 
 export default function DoctorView({ params }) {
   const resolvedParams = use(params)
@@ -26,11 +27,7 @@ export default function DoctorView({ params }) {
     }))
   }
 
-  const withBase = (p) => {
-    if (!p) return ''
-    if (p.startsWith('http')) return p
-    return `http://localhost:5000${p}`
-  }
+  const withBase = (p) => resolveBackendPath(p)
 
   useEffect(() => {
     setLoading(true)

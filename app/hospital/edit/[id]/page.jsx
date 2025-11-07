@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation"
 import HospitalApi from "@/lib/api/hospitalApi"
 import Swal from 'sweetalert2'
 import { Briefcase, User, Building2, Star, Users, Bed, Calendar, Mail, Phone, Globe, MapPin, Award, Info, Navigation, Plus, Trash2, Stethoscope, Microscope, Camera, ChevronDown, ChevronUp } from "lucide-react"
+import { resolveBackendPath } from "@/lib/config"
 
 export default function EditHospitalPage() {
   const { id } = useParams()
@@ -1121,7 +1122,7 @@ export default function EditHospitalPage() {
                                 
                                 {!galleryPreviews[idx] && typeof item === 'string' && item && (
                                   <img 
-                                    src={item.startsWith('http') ? item : `http://localhost:5000${item}`} 
+                                    src={resolveBackendPath(item)} 
                                     alt={`Gallery ${idx + 1}`} 
                                     className="w-full h-full object-cover" 
                                   />

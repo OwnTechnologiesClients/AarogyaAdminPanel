@@ -18,6 +18,7 @@ import Link from "next/link"
 import Swal from 'sweetalert2'
 import { useRouter } from 'next/navigation'
 import { isSuperadmin } from '@/lib/authUtils'
+import { API_BASE_URL, BACKEND_URL } from "@/lib/config"
 
 export default function AdminUsersPage() {
   const router = useRouter()
@@ -65,7 +66,7 @@ export default function AdminUsersPage() {
         })
 
         const token = localStorage.getItem('adminToken')
-        const response = await fetch(`http://localhost:5000/api/admin/users?${params}`, {
+        const response = await fetch(`${API_BASE_URL}/admin/users?${params}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -91,7 +92,7 @@ export default function AdminUsersPage() {
         if (e.response?.status === 404) {
           console.error('API endpoint not found. Make sure the backend is running.')
         } else if (e.code === 'ECONNREFUSED') {
-          console.error('Cannot connect to backend server. Make sure it\'s running on http://localhost:5000')
+          console.error(`Cannot connect to backend server. Make sure it's running on ${BACKEND_URL}`)
         }
       } finally {
         setLoading(false)
@@ -123,7 +124,7 @@ export default function AdminUsersPage() {
     if (result.isConfirmed) {
       try {
         const token = localStorage.getItem('adminToken')
-        const response = await fetch(`http://localhost:5000/api/admin/users/${adminUserId}`, {
+        const response = await fetch(`${API_BASE_URL}/admin/users/${adminUserId}`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -143,7 +144,14 @@ export default function AdminUsersPage() {
             showConfirmButton: false
           })
           
-          const data = await fetch(`http://localhost:5000/api/admin/users?page=${currentPage}&limit=${itemsPerPage}&search=${searchTerm}`, {
+          const refreshParams = new URLSearchParams({
+            page: currentPage,
+            limit: itemsPerPage,
+          })
+          if (searchTerm) {
+            refreshParams.set('search', searchTerm)
+          }
+          const data = await fetch(`${API_BASE_URL}/admin/users?${refreshParams.toString()}`, {
             headers: {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'
@@ -190,7 +198,7 @@ export default function AdminUsersPage() {
     if (result.isConfirmed) {
       try {
         const token = localStorage.getItem('adminToken')
-        const response = await fetch(`http://localhost:5000/api/admin/users/${adminUserId}`, {
+        const response = await fetch(`${API_BASE_URL}/admin/users/${adminUserId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -209,7 +217,14 @@ export default function AdminUsersPage() {
           router.refresh()
           // Also refetch the data
           const token = localStorage.getItem('adminToken')
-          const data = await fetch(`http://localhost:5000/api/admin/users?page=${currentPage}&limit=${itemsPerPage}&search=${searchTerm}`, {
+          const refreshParams = new URLSearchParams({
+            page: currentPage,
+            limit: itemsPerPage,
+          })
+          if (searchTerm) {
+            refreshParams.set('search', searchTerm)
+          }
+          const data = await fetch(`${API_BASE_URL}/admin/users?${refreshParams.toString()}`, {
             headers: {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'

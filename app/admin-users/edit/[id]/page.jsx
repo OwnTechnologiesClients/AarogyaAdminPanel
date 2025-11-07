@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import Swal from 'sweetalert2'
+import { API_BASE_URL } from "@/lib/config"
 
 export default function EditAdminUserPage() {
   const router = useRouter()
@@ -46,7 +47,7 @@ export default function EditAdminUserPage() {
   const fetchAdminUser = async () => {
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch(`http://localhost:5000/api/admin/users/${adminUserId}`, {
+      const response = await fetch(`${API_BASE_URL}/admin/users/${adminUserId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -128,7 +129,7 @@ export default function EditAdminUserPage() {
 
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch(`http://localhost:5000/api/admin/users/${adminUserId}`, {
+      const response = await fetch(`${API_BASE_URL}/admin/users/${adminUserId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

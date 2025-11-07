@@ -5,6 +5,7 @@ import TreatmentApi from '@/lib/api/treatmentApi'
 import { Layout } from '@/components/layout'
 import Link from 'next/link'
 import { Stethoscope, Star, Clock, DollarSign, Building2, User, Info, Award, Microscope, ChevronDown, ChevronUp } from "lucide-react"
+import { resolveBackendPath } from '@/lib/config'
 
 export default function TreatmentView({ params }) {
   const resolvedParams = use(params)
@@ -26,11 +27,7 @@ export default function TreatmentView({ params }) {
     }))
   }
 
-  const withBase = (p) => {
-    if (!p) return ''
-    if (p.startsWith('http')) return p
-    return `http://localhost:5000${p}`
-  }
+  const withBase = (p) => resolveBackendPath(p)
 
   useEffect(() => {
     setLoading(true)

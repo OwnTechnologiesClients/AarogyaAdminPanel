@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Layout } from "@/components/layout"
+import { API_BASE_URL, BACKEND_URL } from "@/lib/config"
 import { Pagination } from "@/components/ui/pagination"
 import { 
   Search, 
@@ -53,7 +54,7 @@ export default function UsersPage() {
           ...(filterAuthProvider && { authProvider: filterAuthProvider })
         })
 
-        const response = await fetch(`http://localhost:5000/api/users?${params}`)
+        const response = await fetch(`${API_BASE_URL}/users?${params}`)
         const data = await response.json()
 
         if (data?.success) {
@@ -69,7 +70,7 @@ export default function UsersPage() {
         if (e.response?.status === 404) {
           console.error('API endpoint not found. Make sure the backend is running.')
         } else if (e.code === 'ECONNREFUSED') {
-          console.error('Cannot connect to backend server. Make sure it\'s running on http://localhost:5000')
+          console.error(`Cannot connect to backend server. Make sure it's running on ${BACKEND_URL}`)
         }
       } finally {
         setLoading(false)

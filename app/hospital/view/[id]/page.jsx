@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation"
 import HospitalApi from "@/lib/api/hospitalApi"
 import Link from "next/link"
 import { Building2, Star, Users, Bed, Calendar, Mail, Phone, Globe, MapPin, Award, Info, Navigation, Stethoscope, Microscope, Camera, ChevronDown, ChevronUp, User } from "lucide-react"
+import { resolveBackendPath } from "@/lib/config"
 
 export default function HospitalViewPage() {
   const params = useParams()
@@ -46,12 +47,7 @@ export default function HospitalViewPage() {
     fetchOne()
   }, [id])
 
-  const withBase = (p) => {
-    if (!p) return ''
-    if (p.startsWith('http')) return p
-    const path = p.startsWith('/') ? p : `/${p}`
-    return `http://localhost:5000${path}`
-  }
+  const withBase = (p) => resolveBackendPath(p)
 
   return (
     <Layout>

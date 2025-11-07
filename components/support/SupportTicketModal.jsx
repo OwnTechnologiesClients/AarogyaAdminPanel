@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { X, Paperclip, User, MessageCircle, CheckCircle, Clock, AlertCircle, Download } from "lucide-react";
 import SupportApi from "@/lib/api/supportApi";
+import { BACKEND_URL } from "@/lib/config";
 import Swal from 'sweetalert2';
 
 const SupportTicketModal = ({ ticket, onUpdate, onClose, mode = 'reply' }) => {
@@ -78,7 +79,7 @@ const SupportTicketModal = ({ ticket, onUpdate, onClose, mode = 'reply' }) => {
       const filename = attachment.path.split('/').pop();
       
       // Construct the download URL using the dedicated download endpoint
-      const downloadUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/support/download/${filename}`;
+      const downloadUrl = `${BACKEND_URL}/api/support/download/${filename}`;
       
       // Fetch the file
       const response = await fetch(downloadUrl, {
