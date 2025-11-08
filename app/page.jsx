@@ -26,21 +26,44 @@ export default function Dashboard() {
     fetchDashboardStats()
   }, [])
 
+  const extractTotalCount = (response) => {
+    if (!response || typeof response !== 'object') return 0
+
+    if (typeof response.total === 'number') return response.total
+    if (typeof response.totalItems === 'number') return response.totalItems
+
+    if (typeof response.count === 'number') {
+      // Some endpoints (like treatments) only return count
+      return response.count
+    }
+
+    if (Array.isArray(response.data)) return response.data.length
+    if (Array.isArray(response.results)) return response.results.length
+    if (Array.isArray(response)) return response.length
+
+    // Handle nested data payloads
+    if (response.data && typeof response.data === 'object') {
+      return extractTotalCount(response.data)
+    }
+
+    return 0
+  }
+
   const fetchDashboardStats = async () => {
     try {
       setStats(prev => ({ ...prev, loading: true }))
       
       // Fetch all data in parallel
       const [hospitalsResponse, doctorsResponse, treatmentsResponse] = await Promise.all([
-        HospitalApi.list(),
-        DoctorApi.list(),
+        HospitalApi.list({ page: 1, limit: 1 }),
+        DoctorApi.list({ page: 1, limit: 1 }),
         TreatmentApi.list()
       ])
       
       setStats({
-        hospitals: hospitalsResponse?.data?.length || 0,
-        doctors: doctorsResponse?.data?.length || 0,
-        treatments: treatmentsResponse?.data?.length || 0,
+        hospitals: extractTotalCount(hospitalsResponse),
+        doctors: extractTotalCount(doctorsResponse),
+        treatments: extractTotalCount(treatmentsResponse),
         loading: false
       })
     } catch (error) {

@@ -245,6 +245,7 @@ export default function EditDoctor({ params }) {
 // Doctor Details Edit Tab Component
 const DoctorDetailsEditTab = ({ formData, setFormData, hospitals, goNext }) => {
   const [imagePreview, setImagePreview] = useState(null);
+  const uploadInputId = 'doctor-image-upload-details';
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -510,6 +511,31 @@ const ProfileBioEditTab = ({
   const [awardInput, setAwardInput] = useState('')
   const [publicationInput, setPublicationInput] = useState('')
   const [certificationInput, setCertificationInput] = useState('')
+  const [imagePreview, setImagePreview] = useState(() => {
+    if (formData?.image && typeof formData.image === 'string') {
+      return resolveBackendPath(formData.image)
+    }
+    return null
+  })
+  const uploadInputId = 'doctor-image-upload-profile'
+
+  useEffect(() => {
+    if (!formData?.image) {
+      setImagePreview(null)
+      return
+    }
+
+    if (typeof formData.image === 'string') {
+      setImagePreview(resolveBackendPath(formData.image))
+      return
+    }
+
+    const objectUrl = URL.createObjectURL(formData.image)
+    setImagePreview(objectUrl)
+    return () => {
+      URL.revokeObjectURL(objectUrl)
+    }
+  }, [formData?.image])
   
   // Degree inputs
   const [degreeNameInput, setDegreeNameInput] = useState('')
@@ -624,13 +650,6 @@ const ProfileBioEditTab = ({
     }))
   }
 
-  const getCurrentImageSrc = () => {
-    if (formData?.image && typeof formData.image === 'string') {
-      return resolveBackendPath(formData.image)
-    }
-    return null
-  }
-
   const handleImageChange = (e) => {
     const file = e.target.files?.[0]
     if (file) {
@@ -656,10 +675,10 @@ const ProfileBioEditTab = ({
           <div className="flex items-center space-x-6">
             {/* Current Image */}
             <div className="relative w-32 h-32 bg-gray-100 rounded-lg border border-gray-300 flex items-center justify-center overflow-hidden">
-              {getCurrentImageSrc() ? (
+              {imagePreview ? (
                 <div className="relative w-full h-full">
                   <img
-                    src={getCurrentImageSrc()}
+                    src={imagePreview}
                     alt="Current"
                     className="w-full h-full object-cover rounded-lg"
                   />
@@ -681,21 +700,21 @@ const ProfileBioEditTab = ({
 
             {/* Upload Section */}
             <div className="w-32 h-32 bg-gray-100 rounded-lg border border-gray-300 flex items-center justify-center hover:bg-gray-200 transition-colors cursor-pointer"
-                 onClick={() => document.getElementById('image-upload-edit-bio').click()}>
+                 onClick={() => document.getElementById(uploadInputId)?.click()}>
               <div className="text-center">
                 <p className="text-sm text-gray-600 font-medium">Upload new photo</p>
               </div>
             </div>
             <input
-              id="image-upload-edit-bio"
+              id={uploadInputId}
               type="file"
               accept="image/*"
               onChange={handleImageChange}
               className="hidden"
             />
           </div>
-            </div>
-          </div>
+        </div>
+      </div>
 
         {/* Introduction */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
