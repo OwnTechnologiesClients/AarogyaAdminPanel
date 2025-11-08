@@ -244,29 +244,69 @@ export default function EditDoctor({ params }) {
 
 // Doctor Details Edit Tab Component
 const DoctorDetailsEditTab = ({ formData, setFormData, hospitals, goNext }) => {
-  const [imagePreview, setImagePreview] = useState(null);
-  const uploadInputId = 'doctor-image-upload-details';
+  const uploadInputId = 'doctor-image-upload-details'
+  const [imagePreview, setImagePreview] = useState(() => {
+    if (formData?.image && typeof formData.image === 'string') {
+      return resolveBackendPath(formData.image)
+    }
+    return null
+  })
+  const [inputKey, setInputKey] = useState(0)
+
+  useEffect(() => {
+    if (!formData?.image) {
+      setImagePreview(null)
+      return
+    }
+    if (typeof formData.image === 'string') {
+      setImagePreview(resolveBackendPath(formData.image))
+    }
+  }, [formData?.image])
+
+  useEffect(() => {
+    return () => {
+      if (imagePreview && imagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreview)
+      }
+    }
+  }, [imagePreview])
+
+  const openFileDialog = () => {
+    document.getElementById(uploadInputId)?.click()
+  }
 
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setFormData(prev => ({ ...prev, image: file }));
-      setImagePreview(URL.createObjectURL(file));
-    }
-  };
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setFormData(prev => ({ ...prev, image: file }))
+    setImagePreview(prev => {
+      if (prev && prev.startsWith('blob:')) {
+        URL.revokeObjectURL(prev)
+      }
+      return URL.createObjectURL(file)
+    })
+    setInputKey(key => key + 1)
+  }
 
   const handleRemoveImage = () => {
-    setFormData(prev => ({ ...prev, image: null }));
-    setImagePreview(null);
-  };
+    setFormData(prev => ({ ...prev, image: null }))
+    setImagePreview(prev => {
+      if (prev && prev.startsWith('blob:')) {
+        URL.revokeObjectURL(prev)
+      }
+      return null
+    })
+    setInputKey(key => key + 1)
+  }
 
   const getCurrentImageSrc = () => {
-    if (imagePreview) return imagePreview;
+    if (imagePreview) return imagePreview
     if (formData.image && typeof formData.image === 'string') {
-      return resolveBackendPath(formData.image);
+      return resolveBackendPath(formData.image)
     }
-    return null;
-  };
+    return null
+  }
 
   return (
     <div className="space-y-6">
@@ -518,6 +558,7 @@ const ProfileBioEditTab = ({
     return null
   })
   const uploadInputId = 'doctor-image-upload-profile'
+  const [inputKey, setInputKey] = useState(0)
 
   useEffect(() => {
     if (!formData?.image) {
@@ -530,12 +571,16 @@ const ProfileBioEditTab = ({
       return
     }
 
-    const objectUrl = URL.createObjectURL(formData.image)
-    setImagePreview(objectUrl)
-    return () => {
-      URL.revokeObjectURL(objectUrl)
-    }
+    // File previews handled in image change handler
   }, [formData?.image])
+  
+  useEffect(() => {
+    return () => {
+      if (imagePreview && imagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreview)
+      }
+    }
+  }, [imagePreview])
   
   // Degree inputs
   const [degreeNameInput, setDegreeNameInput] = useState('')
@@ -650,15 +695,33 @@ const ProfileBioEditTab = ({
     }))
   }
 
+  const openFileDialog = () => {
+    document.getElementById(uploadInputId)?.click()
+  }
+
   const handleImageChange = (e) => {
     const file = e.target.files?.[0]
-    if (file) {
-      setFormData(prev => ({ ...prev, image: file }))
-    }
+    if (!file) return
+
+    setImagePreview(prev => {
+      if (prev && prev.startsWith('blob:')) {
+        URL.revokeObjectURL(prev)
+      }
+      return URL.createObjectURL(file)
+    })
+    setFormData(prev => ({ ...prev, image: file }))
+    setInputKey(key => key + 1)
   }
 
   const handleRemoveImage = () => {
+    setImagePreview(prev => {
+      if (prev && prev.startsWith('blob:')) {
+        URL.revokeObjectURL(prev)
+      }
+      return null
+    })
     setFormData(prev => ({ ...prev, image: null }))
+    setInputKey(key => key + 1)
   }
 
 
@@ -700,12 +763,13 @@ const ProfileBioEditTab = ({
 
             {/* Upload Section */}
             <div className="w-32 h-32 bg-gray-100 rounded-lg border border-gray-300 flex items-center justify-center hover:bg-gray-200 transition-colors cursor-pointer"
-                 onClick={() => document.getElementById(uploadInputId)?.click()}>
+                 onClick={openFileDialog}>
               <div className="text-center">
                 <p className="text-sm text-gray-600 font-medium">Upload new photo</p>
               </div>
             </div>
             <input
+              key={inputKey}
               id={uploadInputId}
               type="file"
               accept="image/*"
