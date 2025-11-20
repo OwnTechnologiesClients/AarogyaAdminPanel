@@ -4,7 +4,7 @@ import { useEffect, useState, use } from 'react'
 import DoctorApi from '@/lib/api/doctorApi'
 import { Layout } from '@/components/layout'
 import Link from 'next/link'
-import { Building2, Star, Users, Bed, Calendar, Mail, Phone, Globe, MapPin, Award, Info, Navigation, Stethoscope, Microscope, Camera, ChevronDown, ChevronUp, Briefcase } from "lucide-react"
+import { Building2, Star, Users, Bed, Calendar, Mail, Phone, Globe, MapPin, Award, Info, Navigation, Stethoscope, Microscope, Camera, ChevronDown, ChevronUp, Briefcase, BookOpen, GraduationCap, FileText } from "lucide-react"
 import { resolveBackendPath } from '@/lib/config'
 
 export default function DoctorView({ params }) {
@@ -17,7 +17,10 @@ export default function DoctorView({ params }) {
     degrees: false,
     professionalExperience: false,
     languages: false,
-    awards: false
+    awards: false,
+    publications: false,
+    certifications: false,
+    researchWork: false
   })
   const [error, setError] = useState("")
 
@@ -199,6 +202,19 @@ export default function DoctorView({ params }) {
               </div>
             </div>
 
+            {/* Research Work */}
+            {data.researchWork && (
+              <div className="bg-gray-50 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <FileText className="w-5 h-5 mr-2 text-blue-600" />
+                  Research Work
+                </h3>
+                <div className="p-4 bg-white rounded-lg border border-gray-200">
+                  <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{data.researchWork}</p>
+                </div>
+              </div>
+            )}
+
             {/* Medical Specializations */}
             <div className="bg-gray-50 rounded-lg p-6">
               <div 
@@ -368,6 +384,74 @@ export default function DoctorView({ params }) {
                     </div>
                   ) : (
                     <div className="text-gray-500 text-sm">No awards listed</div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Publications */}
+            <div className="bg-gray-50 rounded-lg p-6">
+              <div 
+                className="flex items-center justify-between cursor-pointer hover:bg-gray-100 p-2 rounded-md transition-colors"
+                onClick={() => toggleSection('publications')}
+              >
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <BookOpen className="w-5 h-5 mr-2 text-indigo-600" />
+                  Publications
+                  <span className="ml-2 text-sm font-normal text-gray-500">({data.publications?.length || 0})</span>
+                </h3>
+                {expandedSections.publications ? (
+                  <ChevronUp className="w-5 h-5 text-gray-400" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-gray-400" />
+                )}
+              </div>
+              {expandedSections.publications && (
+                <div className="mt-4">
+                  {data.publications && data.publications.length > 0 ? (
+                    <div className="space-y-3">
+                      {data.publications.map((publication, idx) => (
+                        <div key={idx} className="p-4 bg-white rounded-lg border-l-4 border-indigo-400">
+                          <div className="text-gray-900 font-medium">{publication}</div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-gray-500 text-sm">No publications listed</div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Certifications */}
+            <div className="bg-gray-50 rounded-lg p-6">
+              <div 
+                className="flex items-center justify-between cursor-pointer hover:bg-gray-100 p-2 rounded-md transition-colors"
+                onClick={() => toggleSection('certifications')}
+              >
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <GraduationCap className="w-5 h-5 mr-2 text-teal-600" />
+                  Certifications
+                  <span className="ml-2 text-sm font-normal text-gray-500">({data.certifications?.length || 0})</span>
+                </h3>
+                {expandedSections.certifications ? (
+                  <ChevronUp className="w-5 h-5 text-gray-400" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-gray-400" />
+                )}
+              </div>
+              {expandedSections.certifications && (
+                <div className="mt-4">
+                  {data.certifications && data.certifications.length > 0 ? (
+                    <div className="space-y-3">
+                      {data.certifications.map((certification, idx) => (
+                        <div key={idx} className="p-4 bg-white rounded-lg border-l-4 border-teal-400">
+                          <div className="text-gray-900 font-medium">{certification}</div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-gray-500 text-sm">No certifications listed</div>
                   )}
                 </div>
               )}
