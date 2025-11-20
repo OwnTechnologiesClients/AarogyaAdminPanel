@@ -84,6 +84,39 @@ export default function EditDoctor({ params }) {
     }))
   }
 
+  // Format validation functions
+  const validateRating = (rating) => {
+    if (!rating) return { valid: true, message: '' }
+    const num = parseFloat(rating)
+    if (isNaN(num)) return { valid: false, message: 'Rating must be a number' }
+    if (num < 0 || num > 5) return { valid: false, message: 'Rating must be between 0 and 5' }
+    return { valid: true, message: '' }
+  }
+
+  const validateExperience = (experience) => {
+    if (!experience) return { valid: true, message: '' }
+    // Allow numeric values or format like "12+ years", "5 years", etc.
+    const numericMatch = experience.match(/^(\d+)\+?\s*(years?)?$/i)
+    if (numericMatch) return { valid: true, message: '' }
+    // Check if it's just a number
+    if (!isNaN(parseFloat(experience)) && isFinite(experience)) return { valid: true, message: '' }
+    return { valid: false, message: 'Experience must be a number or format like "12" or "12+ years"' }
+  }
+
+  const validateYear = (year) => {
+    if (!year) return { valid: false, message: 'Year is required' }
+    // Check if it's a 4-digit number between 1900 and current year + 10
+    const yearNum = parseInt(year, 10)
+    const currentYear = new Date().getFullYear()
+    if (isNaN(yearNum) || year.length !== 4) {
+      return { valid: false, message: 'Year must be a 4-digit number (e.g., 2015)' }
+    }
+    if (yearNum < 1900 || yearNum > currentYear + 10) {
+      return { valid: false, message: `Year must be between 1900 and ${currentYear + 10}` }
+    }
+    return { valid: true, message: '' }
+  }
+
   useEffect(() => {
     DoctorApi.getById(id)
       .then(res => {
@@ -119,6 +152,44 @@ export default function EditDoctor({ params }) {
 
   const submitUpdate = async () => {
     if (!formData) return
+
+    // Format validation
+    const ratingValidation = validateRating(formData.rating)
+    if (!ratingValidation.valid) {
+      await Swal.fire({
+        title: 'Validation Error!',
+        text: `Rating: ${ratingValidation.message}`,
+        icon: 'error',
+        confirmButtonText: 'OK'
+      })
+      return
+    }
+
+    const experienceValidation = validateExperience(formData.experience)
+    if (!experienceValidation.valid) {
+      await Swal.fire({
+        title: 'Validation Error!',
+        text: `Experience: ${experienceValidation.message}`,
+        icon: 'error',
+        confirmButtonText: 'OK'
+      })
+      return
+    }
+
+    // Validate all degree years
+    for (let i = 0; i < (formData.degrees || []).length; i++) {
+      const yearValidation = validateYear(formData.degrees[i].year)
+      if (!yearValidation.valid) {
+        await Swal.fire({
+          title: 'Validation Error!',
+          text: `Degree ${i + 1} Year: ${yearValidation.message}`,
+          icon: 'error',
+          confirmButtonText: 'OK'
+        })
+        return
+      }
+    }
+
     setSaving(true)
     try {
       const fd = new FormData()
@@ -588,19 +659,38 @@ const ProfileBioEditTab = ({
   const [degreeYearInput, setDegreeYearInput] = useState('')
 
   const addDegree = () => {
-    if (degreeNameInput && degreeInstitutionInput && degreeYearInput) {
-      setFormData(prev => ({
-        ...prev,
-        degrees: [...(prev.degrees || []), { 
-          name: degreeNameInput, 
-          institution: degreeInstitutionInput,
-          year: degreeYearInput
-        }]
-      }))
-      setDegreeNameInput('')
-      setDegreeInstitutionInput('')
-      setDegreeYearInput('')
+    if (!degreeNameInput || !degreeInstitutionInput || !degreeYearInput) {
+      Swal.fire({
+        title: 'Validation Error!',
+        text: 'Please fill all degree fields: Name, Institution, and Year',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      })
+      return
     }
+
+    const yearValidation = validateYear(degreeYearInput)
+    if (!yearValidation.valid) {
+      Swal.fire({
+        title: 'Validation Error!',
+        text: `Year: ${yearValidation.message}`,
+        icon: 'error',
+        confirmButtonText: 'OK'
+      })
+      return
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      degrees: [...(prev.degrees || []), { 
+        name: degreeNameInput.trim(), 
+        institution: degreeInstitutionInput.trim(),
+        year: degreeYearInput.trim()
+      }]
+    }))
+    setDegreeNameInput('')
+    setDegreeInstitutionInput('')
+    setDegreeYearInput('')
   }
 
   const handleRemoveDegree = (index) => {

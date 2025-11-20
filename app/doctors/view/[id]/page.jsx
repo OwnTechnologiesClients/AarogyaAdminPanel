@@ -4,7 +4,7 @@ import { useEffect, useState, use } from 'react'
 import DoctorApi from '@/lib/api/doctorApi'
 import { Layout } from '@/components/layout'
 import Link from 'next/link'
-import { Building2, Star, Users, Bed, Calendar, Mail, Phone, Globe, MapPin, Award, Info, Navigation, Stethoscope, Microscope, Camera, ChevronDown, ChevronUp } from "lucide-react"
+import { Building2, Star, Users, Bed, Calendar, Mail, Phone, Globe, MapPin, Award, Info, Navigation, Stethoscope, Microscope, Camera, ChevronDown, ChevronUp, Briefcase } from "lucide-react"
 import { resolveBackendPath } from '@/lib/config'
 
 export default function DoctorView({ params }) {
@@ -15,6 +15,7 @@ export default function DoctorView({ params }) {
   const [expandedSections, setExpandedSections] = useState({
     specializations: false,
     degrees: false,
+    professionalExperience: false,
     languages: false,
     awards: false
   })
@@ -252,17 +253,53 @@ export default function DoctorView({ params }) {
               {expandedSections.degrees && (
                 <div className="mt-4">
                   {data.degrees && data.degrees.length > 0 ? (
-                    <div className="space-y-4">
+                    <div className="space-y-2">
                       {data.degrees.map((deg, idx) => (
-                        <div key={idx} className="p-4 bg-white rounded-lg border border-gray-200">
-                          <div className="font-medium text-gray-900">{deg.name}</div>
-                          <div className="text-gray-600 mt-1">{deg.institution}</div>
-                          <div className="text-gray-500 text-sm mt-1">{deg.year}</div>
+                        <div key={idx} className="bg-gray-50 p-3 rounded-md">
+                          <span className="font-semibold text-gray-800">{deg.name}</span>
+                          <span className="text-gray-600"> from {deg.institution}</span>
+                          <span className="text-gray-500"> ({deg.year})</span>
                         </div>
                       ))}
                     </div>
                   ) : (
                     <div className="text-gray-500 text-sm">No education details listed</div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Professional Experience */}
+            <div className="bg-gray-50 rounded-lg p-6">
+              <div 
+                className="flex items-center justify-between cursor-pointer hover:bg-gray-100 p-2 rounded-md transition-colors"
+                onClick={() => toggleSection('professionalExperience')}
+              >
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <Briefcase className="w-5 h-5 mr-2 text-blue-600" />
+                  Professional Experience
+                  <span className="ml-2 text-sm font-normal text-gray-500">({data.professionalExperience?.length || 0})</span>
+                </h3>
+                {expandedSections.professionalExperience ? (
+                  <ChevronUp className="w-5 h-5 text-gray-400" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-gray-400" />
+                )}
+              </div>
+              {expandedSections.professionalExperience && (
+                <div className="mt-4">
+                  {data.professionalExperience && data.professionalExperience.length > 0 ? (
+                    <div className="space-y-2">
+                      {data.professionalExperience.map((exp, idx) => (
+                        <div key={idx} className="bg-gray-50 p-3 rounded-md">
+                          <span className="font-semibold text-gray-800">{exp.position}</span>
+                          <span className="text-gray-600"> at {exp.institution}</span>
+                          <span className="text-gray-500"> ({exp.duration})</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-gray-500 text-sm">No professional experience listed</div>
                   )}
                 </div>
               )}
