@@ -4,8 +4,11 @@ import { useEffect, useState } from "react"
 import { Layout } from "@/components/layout"
 import { useParams, useRouter } from "next/navigation"
 import HospitalApi from "@/lib/api/hospitalApi"
+import SpecialityApi from '@/lib/api/specialityApi'
+import EquipmentApi from '@/lib/api/equipmentApi'
+import { getApiErrorMessage } from '@/lib/utils'
 import Swal from 'sweetalert2'
-import { Briefcase, User, Building2, Star, Users, Bed, Calendar, Mail, Phone, Globe, MapPin, Award, Info, Navigation, Plus, Trash2, Stethoscope, Microscope, Camera, ChevronDown, ChevronUp } from "lucide-react"
+import { Briefcase, User, Building2, Star, Users, Bed, Calendar, Mail, Phone, Globe, MapPin, Award, Info, Navigation, Plus, Trash2, Stethoscope, Microscope, Camera, ChevronDown, ChevronUp, Search } from "lucide-react"
 import { resolveBackendPath } from "@/lib/config"
 
 export default function EditHospitalPage() {
@@ -22,6 +25,11 @@ export default function EditHospitalPage() {
     equipment: true,
     gallery: true
   })
+  const [specialities, setSpecialities] = useState([])
+  const [equipments, setEquipments] = useState([])
+  const [loadingMeta, setLoadingMeta] = useState(true)
+  const [specialitySearch, setSpecialitySearch] = useState('')
+  const [equipmentSearch, setEquipmentSearch] = useState('')
 
   useEffect(() => {
     if (!id) return
@@ -43,6 +51,8 @@ export default function EditHospitalPage() {
           userScore: json.data.rating?.userScore || '',
           googleRating: json.data.rating?.googleRating || '',
           image: json.data.image || null,
+          specialityIds: (json.data.specialityIds || []).map(sp => sp._id || sp),
+          equipmentIds: (json.data.equipmentIds || []).map(eq => eq._id || eq),
           specialties: (json.data.specialties || []).map(s => ({
             ...s,
             keyServices: convertKeyServicesForDisplay(s.keyServices)
@@ -62,13 +72,74 @@ export default function EditHospitalPage() {
           isActive: json.data.isActive !== undefined ? json.data.isActive : true
         })
       } catch (e) {
-        setError(e?.message || 'Error')
+        setError(getApiErrorMessage(e, 'Failed to load hospital details. Please refresh the page.'))
       } finally {
         setLoading(false)
       }
     }
     fetchOne()
   }, [id])
+
+  // Fetch specialities and equipments on mount
+  useEffect(() => {
+    const fetchMetaData = async () => {
+      try {
+        setLoadingMeta(true)
+        const [specialitiesRes, equipmentsRes] = await Promise.all([
+          SpecialityApi.list({ isActive: 'true' }),
+          EquipmentApi.list({ isActive: 'true' })
+        ])
+        
+        if (specialitiesRes?.success) {
+          setSpecialities(specialitiesRes.data || [])
+        }
+        if (equipmentsRes?.success) {
+          setEquipments(equipmentsRes.data || [])
+        }
+      } catch (error) {
+        console.error('Error fetching meta data:', error)
+      } finally {
+        setLoadingMeta(false)
+      }
+    }
+    fetchMetaData()
+  }, [])
+
+  const toggleSpeciality = (specialityId) => {
+    setFormData(prev => {
+      if (!prev) return prev
+      const currentIds = prev.specialityIds || []
+      const isSelected = currentIds.includes(specialityId)
+      return {
+        ...prev,
+        specialityIds: isSelected
+          ? currentIds.filter(id => id !== specialityId)
+          : [...currentIds, specialityId]
+      }
+    })
+  }
+
+  const toggleEquipment = (equipmentId) => {
+    setFormData(prev => {
+      if (!prev) return prev
+      const currentIds = prev.equipmentIds || []
+      const isSelected = currentIds.includes(equipmentId)
+      return {
+        ...prev,
+        equipmentIds: isSelected
+          ? currentIds.filter(id => id !== equipmentId)
+          : [...currentIds, equipmentId]
+      }
+    })
+  }
+
+  const filteredSpecialities = specialities.filter(sp =>
+    sp.name?.toLowerCase().includes(specialitySearch.toLowerCase())
+  )
+
+  const filteredEquipments = equipments.filter(eq =>
+    eq.name?.toLowerCase().includes(equipmentSearch.toLowerCase())
+  )
 
   // Helper functions for form management
   const toggleSection = (section) => {
@@ -240,6 +311,10 @@ export default function EditHospitalPage() {
     if (formData.operatingHours && typeof formData.operatingHours === 'object') {
       fd.append('operatingHours', JSON.stringify(formData.operatingHours))
     }
+    // Send specialityIds and equipmentIds as JSON arrays
+    fd.append('specialityIds', JSON.stringify(formData.specialityIds || []))
+    fd.append('equipmentIds', JSON.stringify(formData.equipmentIds || []))
+    
     if (Array.isArray(formData.specialties)) {
       const cleanSpecialties = formData.specialties.map((s) => ({
         name: s?.name ?? '',
@@ -326,10 +401,9 @@ export default function EditHospitalPage() {
         router.push('/hospital')
       }
     } catch (e) {
-      const message = e?.response?.data?.message || e?.message || 'Update failed'
       await Swal.fire({
-        title: 'Error!',
-        text: message,
+        title: 'Could not update hospital',
+        text: getApiErrorMessage(e, 'Update failed. Please review the details and try again.'),
         icon: 'error',
         confirmButtonText: 'OK'
       })
@@ -805,7 +879,7 @@ export default function EditHospitalPage() {
           </div>
           <div className={activeTab === 'profile-bio' ? 'block' : 'hidden'}>
             <div className="space-y-6">
-              {/* Specialties */}
+              {/* Hospital Specialities - Checkbox Selection */}
               <div className="bg-white rounded-lg border border-gray-200 p-6">
                 <div 
                   className="flex items-center justify-between mb-4 cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors"
@@ -813,8 +887,8 @@ export default function EditHospitalPage() {
                 >
                   <div className="flex items-center space-x-2">
                     <Stethoscope className="w-5 h-5 text-gray-600" />
-                    <h3 className="text-lg font-medium text-gray-900">Medical Specialties</h3>
-                    <span className="text-sm text-gray-500">({(formData?.specialties || []).length})</span>
+                    <h3 className="text-lg font-medium text-gray-900">Hospital Specialities</h3>
+                    <span className="text-sm text-gray-500">({(formData?.specialityIds || []).length} selected)</span>
                   </div>
                   {expandedSections.specialties ? (
                     <ChevronUp className="w-5 h-5 text-gray-400" />
@@ -825,89 +899,68 @@ export default function EditHospitalPage() {
                 
                 {expandedSections.specialties && (
                   <div className="space-y-4">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      {(formData?.specialties || []).map((sp, idx) => (
-                        <div key={idx} className="border border-gray-200 rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
-                          <div className="flex items-center justify-between mb-3">
-                            <h4 className="text-sm font-medium text-gray-700">Specialty #{idx + 1}</h4>
-                            <button 
-                              type="button" 
-                              onClick={() => removeSpecialty(idx)} 
-                              className="text-red-600 hover:text-red-800 text-sm font-medium"
-                            >
-                              Remove
-                            </button>
-                          </div>
-                          
-                          <div className="space-y-3">
-                            <div className="space-y-1">
-                              <label className="block text-xs font-medium text-gray-600">Specialty Name *</label>
-                              <input 
-                                type="text" 
-                                placeholder="e.g., Cardiology" 
-                                value={sp.name || ''} 
-                                onChange={(e) => updateSpecialty(idx, 'name', e.target.value)} 
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 text-sm" 
-                              />
-                            </div>
-                            
-                            <div className="grid grid-cols-1 gap-3">
-                              <div className="space-y-1">
-                                <label className="block text-xs font-medium text-gray-600">Number of Doctors</label>
-                                <input 
-                                  type="number" 
-                                  min="0" 
-                                  placeholder="25" 
-                                  value={sp.doctorsCount || ''} 
-                                  onChange={(e) => updateSpecialty(idx, 'doctorsCount', e.target.value)} 
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 text-sm" 
-                                />
-                              </div>
-                            </div>
-                            
-                            <div className="space-y-1">
-                              <label className="block text-xs font-medium text-gray-600">Description</label>
-                              <textarea 
-                                placeholder="Brief description of the specialty..." 
-                                value={sp.description || ''} 
-                                onChange={(e) => updateSpecialty(idx, 'description', e.target.value)} 
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 text-sm resize-none" 
-                                rows="2"
-                              />
-                            </div>
-                            
-                            <div className="space-y-1">
-                              <label className="block text-xs font-medium text-gray-600">Key Services</label>
-                              <input 
-                                type="text" 
-                                placeholder="Surgery, Consultation, Treatment (comma separated)" 
-                                value={typeof sp.keyServices === 'string' ? sp.keyServices : (sp.keyServices || []).join(', ')} 
-                                onChange={(e) => updateSpecialty(idx, 'keyServices', e.target.value)} 
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 text-sm" 
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    
-                    {(formData?.specialties || []).length === 0 && (
+                    {loadingMeta ? (
                       <div className="text-center py-8 text-gray-500">
-                        <Stethoscope className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                        <p className="text-sm">No specialties added yet</p>
+                        <p className="text-sm">Loading specialities...</p>
                       </div>
+                    ) : (
+                      <>
+                        {/* Search Bar */}
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                          <input
+                            type="text"
+                            placeholder="Search specialities..."
+                            value={specialitySearch}
+                            onChange={(e) => setSpecialitySearch(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+                          />
+                        </div>
+
+                        {/* Checkbox Grid */}
+                        <div className="max-h-96 overflow-y-auto border border-gray-200 rounded-lg p-4">
+                          {filteredSpecialities.length === 0 ? (
+                            <div className="text-center py-8 text-gray-500">
+                              <Stethoscope className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                              <p className="text-sm">
+                                {specialitySearch ? 'No specialities found matching your search' : 'No specialities available'}
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                              {filteredSpecialities.map((speciality) => {
+                                const isSelected = (formData?.specialityIds || []).includes(speciality._id)
+                                return (
+                                  <label
+                                    key={speciality._id}
+                                    className={`flex items-center space-x-3 p-3 border rounded-lg cursor-pointer transition-colors ${
+                                      isSelected
+                                        ? 'bg-blue-50 border-blue-500'
+                                        : 'bg-white border-gray-200 hover:bg-gray-50'
+                                    }`}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={isSelected}
+                                      onChange={() => toggleSpeciality(speciality._id)}
+                                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                    />
+                                    <div className="flex-1">
+                                      <div className="text-sm font-medium text-gray-900">{speciality.name}</div>
+                                      {speciality.description && (
+                                        <div className="text-xs text-gray-500 mt-1 line-clamp-2">
+                                          {speciality.description}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </label>
+                                )
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      </>
                     )}
-                    
-                    <div className="mt-4">
-                      <button 
-                        type="button" 
-                        onClick={addSpecialty} 
-                        className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm transition-colors w-full justify-center"
-                      >
-                        <Plus className="w-4 h-4" />
-                        <span>Add Specialty</span>
-                      </button>
-                    </div>
                   </div>
                 )}
               </div>
@@ -994,7 +1047,7 @@ export default function EditHospitalPage() {
                 )}
               </div>
 
-              {/* Advanced Medical Equipment */}
+              {/* Medical Equipments - Checkbox Selection */}
               <div className="bg-white rounded-lg border border-gray-200 p-6">
                 <div 
                   className="flex items-center justify-between mb-4 cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors"
@@ -1002,8 +1055,8 @@ export default function EditHospitalPage() {
                 >
                   <div className="flex items-center space-x-2">
                     <Microscope className="w-5 h-5 text-gray-600" />
-                    <h3 className="text-lg font-medium text-gray-900">Advanced Medical Equipment</h3>
-                    <span className="text-sm text-gray-500">({(formData?.advancedMedicalEquipment || []).length})</span>
+                    <h3 className="text-lg font-medium text-gray-900">Medical Equipments</h3>
+                    <span className="text-sm text-gray-500">({(formData?.equipmentIds || []).length} selected)</span>
                   </div>
                   {expandedSections.equipment ? (
                     <ChevronUp className="w-5 h-5 text-gray-400" />
@@ -1014,64 +1067,68 @@ export default function EditHospitalPage() {
                 
                 {expandedSections.equipment && (
                   <div className="space-y-4">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      {(formData?.advancedMedicalEquipment || []).map((eq, idx) => (
-                        <div key={idx} className="border border-gray-200 rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
-                          <div className="flex items-center justify-between mb-3">
-                            <h4 className="text-sm font-medium text-gray-700">Equipment #{idx + 1}</h4>
-                            <button 
-                              type="button" 
-                              onClick={() => removeAdvancedEquipment(idx)} 
-                              className="text-red-600 hover:text-red-800 text-sm font-medium"
-                            >
-                              Remove
-                            </button>
-                          </div>
-                          
-                          <div className="space-y-3">
-                            <div className="space-y-1">
-                              <label className="block text-xs font-medium text-gray-600">Equipment Name *</label>
-                              <input 
-                                type="text" 
-                                placeholder="e.g., MRI Scanner" 
-                                value={eq.name || ''} 
-                                onChange={(e) => updateAdvancedEquipment(idx, 'name', e.target.value)} 
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 text-sm" 
-                              />
-                            </div>
-                            
-                            <div className="space-y-1">
-                              <label className="block text-xs font-medium text-gray-600">Description</label>
-                              <textarea 
-                                placeholder="Describe this equipment..." 
-                                value={eq.description || ''} 
-                                onChange={(e) => updateAdvancedEquipment(idx, 'description', e.target.value)} 
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 text-sm resize-none" 
-                                rows="2"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    
-                    {(formData?.advancedMedicalEquipment || []).length === 0 && (
+                    {loadingMeta ? (
                       <div className="text-center py-8 text-gray-500">
-                        <Microscope className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                        <p className="text-sm">No medical equipment added yet</p>
+                        <p className="text-sm">Loading equipments...</p>
                       </div>
+                    ) : (
+                      <>
+                        {/* Search Bar */}
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                          <input
+                            type="text"
+                            placeholder="Search equipments..."
+                            value={equipmentSearch}
+                            onChange={(e) => setEquipmentSearch(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+                          />
+                        </div>
+
+                        {/* Checkbox Grid */}
+                        <div className="max-h-96 overflow-y-auto border border-gray-200 rounded-lg p-4">
+                          {filteredEquipments.length === 0 ? (
+                            <div className="text-center py-8 text-gray-500">
+                              <Microscope className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                              <p className="text-sm">
+                                {equipmentSearch ? 'No equipments found matching your search' : 'No equipments available'}
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                              {filteredEquipments.map((equipment) => {
+                                const isSelected = (formData?.equipmentIds || []).includes(equipment._id)
+                                return (
+                                  <label
+                                    key={equipment._id}
+                                    className={`flex items-center space-x-3 p-3 border rounded-lg cursor-pointer transition-colors ${
+                                      isSelected
+                                        ? 'bg-blue-50 border-blue-500'
+                                        : 'bg-white border-gray-200 hover:bg-gray-50'
+                                    }`}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={isSelected}
+                                      onChange={() => toggleEquipment(equipment._id)}
+                                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                    />
+                                    <div className="flex-1">
+                                      <div className="text-sm font-medium text-gray-900">{equipment.name}</div>
+                                      {equipment.description && (
+                                        <div className="text-xs text-gray-500 mt-1 line-clamp-2">
+                                          {equipment.description}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </label>
+                                )
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      </>
                     )}
-                    
-                    <div className="mt-4">
-                      <button 
-                        type="button" 
-                        onClick={addAdvancedEquipment} 
-                        className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm transition-colors w-full justify-center"
-                      >
-                        <Plus className="w-4 h-4" />
-                        <span>Add Equipment</span>
-                      </button>
-                    </div>
                   </div>
                 )}
               </div>

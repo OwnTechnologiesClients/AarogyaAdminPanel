@@ -18,14 +18,42 @@ export function Layout({ children }) {
     const checkAuth = () => {
       const token = localStorage.getItem('adminToken') || localStorage.getItem('token')
       
+      // No token at all: treat as logged out
       if (!token) {
         setIsAuthenticated(false)
         setIsChecking(false)
-        // Only redirect if not already on login page
         if (pathname !== '/login') {
           router.replace('/login')
         }
         return
+      }
+
+      // If token looks like a JWT, try to check expiry on the client
+      try {
+        const parts = token.split('.')
+        if (parts.length === 3) {
+          const payloadJson = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'))
+          const payload = JSON.parse(payloadJson)
+          if (payload && typeof payload.exp === 'number') {
+            const isExpired = payload.exp * 1000 < Date.now()
+            if (isExpired) {
+              // Expired token: clear it and force login before user continues
+              localStorage.removeItem('adminToken')
+              localStorage.removeItem('token')
+              localStorage.removeItem('adminName')
+              localStorage.removeItem('adminRole')
+              window.dispatchEvent(new Event('localStorageChange'))
+              setIsAuthenticated(false)
+              setIsChecking(false)
+              if (pathname !== '/login') {
+                router.replace('/login')
+              }
+              return
+            }
+          }
+        }
+      } catch {
+        // If parsing fails, fall back to treating the token as present and let the backend validate
       }
       
       setIsAuthenticated(true)

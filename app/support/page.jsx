@@ -6,6 +6,7 @@ import { Pagination } from "@/components/ui/pagination";
 import SupportTicketModal from "@/components/support/SupportTicketModal";
 import NoDataPlaceholder from "@/components/support/NoDataPlaceholder";
 import SupportApi from "@/lib/api/supportApi";
+import { getApiErrorMessage } from "@/lib/utils";
 
 const SupportPage = () => {
   const [tickets, setTickets] = useState([]);
@@ -50,11 +51,11 @@ const SupportPage = () => {
           setTotalPages(response.pagination?.totalPages || 0);
           console.log('Admin Panel - Tickets loaded:', response.data?.length || 0);
         } else {
-          setError('Failed to load support tickets');
+          setError('Failed to load support tickets from the server.');
         }
       } catch (err) {
         console.error('Admin Panel - Error fetching support tickets:', err);
-        setError('Failed to load support tickets');
+        setError(getApiErrorMessage(err, 'Failed to load support tickets. Please try again.'));
         setTickets([]);
       } finally {
         setLoading(false);

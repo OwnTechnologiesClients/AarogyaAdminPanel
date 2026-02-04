@@ -56,9 +56,11 @@ export default function TreatmentList() {
       try {
         const data = await TreatmentApi.list({ page: currentPage, limit: itemsPerPage, search: searchTerm })
         if (data?.success) {
-          setTreatments(data.data || [])
-          setTotalItems(data.total || 0)
-          setTotalPages(data.totalPages || 1)
+          const list = data.data || []
+          setTreatments(list)
+          const total = data.total ?? data.count ?? (Array.isArray(list) ? list.length : 0)
+          setTotalItems(total)
+          setTotalPages(data.totalPages ?? Math.max(1, Math.ceil(total / itemsPerPage)))
         }
       } catch (e) {
         console.error('Error fetching treatments:', e)
@@ -103,9 +105,11 @@ export default function TreatmentList() {
       // Refresh the list
       const data = await TreatmentApi.list({ page: currentPage, limit: itemsPerPage, search: searchTerm })
       if (data?.success) {
-        setTreatments(data.data || [])
-        setTotalItems(data.total || 0)
-        setTotalPages(data.totalPages || 1)
+        const list = data.data || []
+        setTreatments(list)
+        const total = data.total ?? data.count ?? (Array.isArray(list) ? list.length : 0)
+        setTotalItems(total)
+        setTotalPages(data.totalPages ?? Math.max(1, Math.ceil(total / itemsPerPage)))
       }
     } catch (error) {
       await Swal.fire({
@@ -143,9 +147,11 @@ export default function TreatmentList() {
         // Also refetch the data
         const data = await TreatmentApi.list({ page: currentPage, limit: itemsPerPage, search: searchTerm })
         if (data?.success) {
-          setTreatments(data.data || [])
-          setTotalItems(data.total || 0)
-          setTotalPages(data.totalPages || 1)
+          const list = data.data || []
+          setTreatments(list)
+          const total = data.total ?? data.count ?? (Array.isArray(list) ? list.length : 0)
+          setTotalItems(total)
+          setTotalPages(data.totalPages ?? Math.max(1, Math.ceil(total / itemsPerPage)))
         }
       } catch (error) {
         await Swal.fire({
@@ -202,33 +208,33 @@ export default function TreatmentList() {
             </div>
           </div>
           
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          {/* Table - fixed layout so long text doesn't stretch; truncate with tooltips */}
+          <div className="overflow-x-auto max-w-full">
+            <table className="w-full table-fixed min-w-0">
               <thead className="bg-gradient-to-r from-blue-600 to-indigo-600">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider w-20">
                     ID
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider w-[18%]">
                     Treatment Name
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider w-[10%]">
                     Category
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider w-[14%]">
                     Duration & Recovery
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider w-[14%]">
                     Cost Considerations
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider w-24">
                     Top Hospitals
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider w-20">
                     Status
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider w-28">
                     Action
                   </th>
                 </tr>
@@ -263,49 +269,49 @@ export default function TreatmentList() {
                       <td className="px-4 py-3 whitespace-nowrap text-sm font-bold text-blue-700">
                         #{treatment.id}
                     </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="flex items-center">
-                          <div className="w-12 h-12 rounded-lg overflow-hidden ring-2 ring-blue-200">
+                      <td className="px-4 py-3 whitespace-nowrap min-w-0">
+                      <div className="flex items-center min-w-0">
+                          <div className="w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden ring-2 ring-blue-200">
                             {treatment.image ? (
                               <img 
                                 src={withBase(treatment.image)} 
                                 alt={treatment.name}
-                            className="w-full h-full object-cover"
+                                className="w-full h-full object-cover"
                                 onError={(e) => {
                                   e.target.style.display = 'none';
                                   e.target.nextSibling.style.display = 'flex';
                                 }}
-                          />
+                              />
                             ) : null}
                             <div className={`w-full h-full bg-blue-100 rounded-lg flex items-center justify-center ${treatment.image ? 'hidden' : 'flex'}`}>
                               <Stethoscope className="w-6 h-6 text-blue-600" />
                             </div>
-                        </div>
-                          <div className="ml-3">
-                            <div className="text-sm font-bold text-gray-900">{treatment.name}</div>
-                            <div className="text-xs text-gray-500 truncate max-w-32">{treatment.description?.substring(0, 50)}...</div>
-                        </div>
-                      </div>
-                    </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-800">
-                        {treatment.category}
-                    </td>
-                      <td className="px-4 py-3">
-                      <div className="space-y-1">
-                        <div className="flex items-center space-x-1">
-                            <Clock className="w-3 h-3 text-gray-500" />
-                            <span className="text-xs text-gray-600">{treatment.duration || '-'}</span>
                           </div>
-                          <div className="flex items-center space-x-1">
-                            <UserCheck className="w-3 h-3 text-gray-500" />
-                            <span className="text-xs text-gray-600">{treatment.recovery || '-'}</span>
+                          <div className="ml-3 min-w-0 flex-1">
+                            <div className="text-sm font-bold text-gray-900 truncate" title={treatment.name}>{treatment.name}</div>
+                            <div className="text-xs text-gray-500 truncate" title={treatment.description}>{treatment.description ? (treatment.description.length > 50 ? treatment.description.substring(0, 50) + '...' : treatment.description) : '-'}</div>
+                          </div>
+                      </div>
+                    </td>
+                      <td className="px-4 py-3 text-sm font-semibold text-gray-800 min-w-0">
+                        <span className="block truncate" title={treatment.category}>{treatment.category}</span>
+                    </td>
+                      <td className="px-4 py-3 min-w-0">
+                      <div className="space-y-1 min-w-0">
+                        <div className="flex items-center space-x-1 min-w-0">
+                            <Clock className="w-3 h-3 flex-shrink-0 text-gray-500" />
+                            <span className="text-xs text-gray-600 truncate" title={treatment.duration}>{treatment.duration || '-'}</span>
+                          </div>
+                          <div className="flex items-center space-x-1 min-w-0">
+                            <UserCheck className="w-3 h-3 flex-shrink-0 text-gray-500" />
+                            <span className="text-xs text-gray-600 truncate" title={treatment.recovery}>{treatment.recovery || '-'}</span>
                         </div>
                       </div>
                     </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-700">
-                        <div className="flex items-center space-x-1">
-                          <DollarSign className="w-3 h-3 text-green-600" />
-                          <span className="text-xs text-gray-600 truncate max-w-24">{treatment.costConsiderations?.substring(0, 30)}...</span>
+                      <td className="px-4 py-3 text-sm font-semibold text-gray-700 min-w-0">
+                        <div className="flex items-center space-x-1 min-w-0">
+                          <DollarSign className="w-3 h-3 flex-shrink-0 text-green-600" />
+                          <span className="text-xs text-gray-600 truncate block" title={treatment.costConsiderations}>{treatment.costConsiderations ? (treatment.costConsiderations.length > 40 ? treatment.costConsiderations.substring(0, 40) + '...' : treatment.costConsiderations) : '-'}</span>
                       </div>
                     </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-700">

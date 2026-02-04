@@ -6,6 +6,7 @@ import { Layout } from '@/components/layout'
 import Link from 'next/link'
 import { Stethoscope, Star, Clock, DollarSign, Building2, User, Info, Award, Microscope, ChevronDown, ChevronUp } from "lucide-react"
 import { resolveBackendPath } from '@/lib/config'
+import { getApiErrorMessage } from '@/lib/utils'
 
 export default function TreatmentView({ params }) {
   const resolvedParams = use(params)
@@ -35,7 +36,7 @@ export default function TreatmentView({ params }) {
       .then(res => {
         setData(res.data || res)
       })
-      .catch(err => setError(err?.message || 'Failed to load treatment'))
+      .catch(err => setError(getApiErrorMessage(err, 'Failed to load treatment details. Please refresh the page.')))
       .finally(() => setLoading(false))
   }, [id])
 
@@ -301,7 +302,7 @@ export default function TreatmentView({ params }) {
                   {data.diagnosticTools && data.diagnosticTools.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
                       {data.diagnosticTools.map((tool, idx) => (
-                        <span key={idx} className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
+                        <span key={idx} className="bg-purple-100 text-purple-800 px-3 py-1 rounded-md text-sm font-medium break-words">
                           {tool}
                         </span>
                       ))}
@@ -369,7 +370,7 @@ export default function TreatmentView({ params }) {
                   {data.advantages && data.advantages.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
                       {data.advantages.map((advantage, idx) => (
-                        <span key={idx} className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">
+                        <span key={idx} className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-md text-sm font-medium break-words">
                           {advantage}
                         </span>
                       ))}

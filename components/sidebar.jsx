@@ -23,13 +23,15 @@ import { cn } from "@/lib/utils"
 import Image from "next/image"
 
 const menuItems = [
-   {
+  {
     title: "Hospital Dashboard",
     icon: Building2,
     href: "/hospital",
     subItems: [
       { title: "Add Hospital", href: "/hospital/add" },
       { title: "Hospital List", href: "/hospital" },
+      { title: "Hospital Specialities", href: "/hospital-specialities" },
+      { title: "Medical Equipments", href: "/medical-equipments" },
     ]
   },
   {

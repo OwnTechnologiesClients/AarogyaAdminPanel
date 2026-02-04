@@ -189,33 +189,33 @@ export default function HospitalList() {
             </div>
           </div>
           
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          {/* Table - fixed layout so long text doesn't stretch; truncate with tooltips */}
+          <div className="overflow-x-auto max-w-full">
+            <table className="w-full table-fixed min-w-0">
               <thead className="bg-gradient-to-r from-blue-600 to-indigo-600">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider w-20">
                     ID
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider w-[20%]">
                     Hospital Name
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider w-[12%]">
                     Location
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider w-16">
                     Rating
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider w-[15%]">
                     Accreditation
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider w-16">
                     Doctors
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider w-20">
                     Status
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider w-28">
                     Action
                   </th>
                 </tr>
@@ -226,9 +226,9 @@ export default function HospitalList() {
                     <td className="px-4 py-3 whitespace-nowrap text-sm font-bold text-blue-700">
                       #{hospital.id}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="w-12 h-12 rounded-lg overflow-hidden ring-2 ring-blue-200">
+                    <td className="px-4 py-3 whitespace-nowrap min-w-0">
+                      <div className="flex items-center min-w-0">
+                        <div className="w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden ring-2 ring-blue-200">
                           {withBase(hospital.displayImage || hospital.gallery?.[0]) ? (
                             <img 
                               src={withBase(hospital.displayImage || hospital.gallery?.[0])} 
@@ -247,20 +247,22 @@ export default function HospitalList() {
                             </span>
                           </div>
                         </div>
-                        <div className="ml-3">
-                          <div className="text-sm font-bold text-gray-900">{hospital.name}</div>
-                          <div className="text-xs text-gray-500 truncate max-w-32">{hospital.specialties?.[0]?.name || '-'}</div>
+                        <div className="ml-3 min-w-0 flex-1">
+                          <div className="text-sm font-bold text-gray-900 truncate" title={hospital.name}>{hospital.name}</div>
+                          <div className="text-xs text-gray-500 truncate" title={hospital.specialties?.[0]?.name || '-'}>{hospital.specialties?.[0]?.name || '-'}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-800">
-                      {hospital.location}
+                    <td className="px-4 py-3 text-sm font-semibold text-gray-800 min-w-0">
+                      <span className="block truncate" title={hospital.location}>{hospital.location}</span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm font-bold text-green-600">
                       ⭐ {hospital.rating?.userScore ?? '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-bold text-blue-700">
-                      {(hospital.accreditation || []).join(', ') || '-'}
+                    <td className="px-4 py-3 text-sm font-bold text-blue-700 min-w-0">
+                      <span className="block truncate" title={(hospital.accreditation || []).join(', ') || '-'}>
+                        {(hospital.accreditation || []).join(', ') || '-'}
+                      </span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-700">
                       {hospital.overview?.doctors ?? '-'}

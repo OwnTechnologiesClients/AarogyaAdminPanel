@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { ArrowRight } from "lucide-react"
 import { useRouter } from "next/navigation"
 import api from '@/lib/api'
+import { getApiErrorMessage } from '@/lib/utils'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -48,14 +49,10 @@ export default function LoginPage() {
         localStorage.setItem('adminRole', role)
         router.push('/')
       } else {
-        setError('Invalid response from server')
+        setError('Login failed: server did not return a valid token.')
       }
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-        err.message ||
-        'Login failed. Please try again.'
-      )
+      setError(getApiErrorMessage(err, 'Login failed. Please check your email and password and try again.'))
     } finally {
       setIsLoading(false)
     }

@@ -8,6 +8,7 @@ import { Search, Filter, Eye } from 'lucide-react';
 import enquiryApi from '@/lib/api/enquiryApi';
 import EnquiryViewModal from '@/components/ui/EnquiryViewModal';
 import { API_BASE_URL, BACKEND_URL } from '@/lib/config';
+import { getApiErrorMessage } from '@/lib/utils';
 
 export default function EnquiryPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -78,11 +79,11 @@ export default function EnquiryPage() {
               setTotalItems(response.pagination?.total || 0);
               setTotalPages(response.pagination?.totalPages || 1);
             } else {
-              setError('Failed to fetch enquiries');
+              setError('Failed to fetch enquiries from the server.');
             }
           } catch (err) {
             console.error('Error fetching enquiries:', err);
-            setError(`Failed to fetch enquiries: ${err.message}`);
+            setError(getApiErrorMessage(err, 'Failed to fetch enquiries. Please try again.'));
           } finally {
             setLoading(false);
           }

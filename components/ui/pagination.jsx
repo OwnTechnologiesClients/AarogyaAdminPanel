@@ -8,8 +8,8 @@ export function Pagination({
   itemsPerPage,
   onItemsPerPageChange 
 }) {
-  const startItem = (currentPage - 1) * itemsPerPage + 1
-  const endItem = Math.min(currentPage * itemsPerPage, totalItems)
+  const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1
+  const endItem = totalItems === 0 ? 0 : Math.min(currentPage * itemsPerPage, totalItems)
 
   const getPageNumbers = () => {
     const pages = []
@@ -56,7 +56,9 @@ export function Pagination({
       
       <div className="flex items-center space-x-2">
         <span className="text-sm text-gray-900 font-medium">
-          Showing {startItem} to {endItem} of {totalItems} results
+          {totalItems === 0
+            ? "Showing 0 of 0 results"
+            : `Showing ${startItem} to ${endItem} of ${totalItems} results`}
         </span>
         
         <div className="flex items-center space-x-1">

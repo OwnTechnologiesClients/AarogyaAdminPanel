@@ -6,6 +6,7 @@ import { Layout } from '@/components/layout'
 import Link from 'next/link'
 import { Building2, Star, Users, Bed, Calendar, Mail, Phone, Globe, MapPin, Award, Info, Navigation, Stethoscope, Microscope, Camera, ChevronDown, ChevronUp, Briefcase, BookOpen, GraduationCap, FileText } from "lucide-react"
 import { resolveBackendPath } from '@/lib/config'
+import { getApiErrorMessage } from '@/lib/utils'
 
 export default function DoctorView({ params }) {
   const resolvedParams = use(params)
@@ -39,7 +40,7 @@ export default function DoctorView({ params }) {
       .then(res => {
         setData(res.data || res)
       })
-      .catch(err => setError(err?.message || 'Failed to load doctor'))
+      .catch(err => setError(getApiErrorMessage(err, 'Failed to load doctor details. Please refresh the page.')))
       .finally(() => setLoading(false))
   }, [id])
 
@@ -153,6 +154,7 @@ export default function DoctorView({ params }) {
                   <div><span className="font-medium text-gray-700">Doctor ID:</span> <span className="text-gray-900">{data.id}</span></div>
                   <div><span className="font-medium text-gray-700">Name:</span> <span className="text-gray-900">{data.name}</span></div>
                   <div><span className="font-medium text-gray-700">Specialty:</span> <span className="text-gray-900">{data.specialty}</span></div>
+                  <div><span className="font-medium text-gray-700">Category:</span> <span className="text-gray-900">{data.category || '—'}</span></div>
                 </div>
                 <div className="space-y-3">
                   <div><span className="font-medium text-gray-700">Location:</span> <span className="text-gray-900">{data.location}</span></div>
@@ -237,7 +239,7 @@ export default function DoctorView({ params }) {
                   {data.specializations && data.specializations.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
                       {data.specializations.map((spec, idx) => (
-                        <span key={idx} className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
+                        <span key={idx} className="bg-purple-100 text-purple-800 px-3 py-1 rounded-md text-sm font-medium break-words">
                           {spec}
                         </span>
                       ))}
@@ -343,7 +345,7 @@ export default function DoctorView({ params }) {
                   {data.languages && data.languages.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
                       {data.languages.map((lang, idx) => (
-                        <span key={idx} className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium">
+                        <span key={idx} className="bg-orange-100 text-orange-800 px-3 py-1 rounded-md text-sm font-medium break-words">
                           {lang}
                         </span>
                       ))}

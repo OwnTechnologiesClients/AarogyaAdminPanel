@@ -7,6 +7,7 @@ import HospitalApi from "@/lib/api/hospitalApi"
 import Link from "next/link"
 import { Building2, Star, Users, Bed, Calendar, Mail, Phone, Globe, MapPin, Award, Info, Navigation, Stethoscope, Microscope, Camera, ChevronDown, ChevronUp, User } from "lucide-react"
 import { resolveBackendPath } from "@/lib/config"
+import { getApiErrorMessage } from "@/lib/utils"
 
 export default function HospitalViewPage() {
   const params = useParams()
@@ -39,7 +40,7 @@ export default function HospitalViewPage() {
         if (!json?.success) throw new Error(json?.message || 'Failed to load')
         setData(json.data)
       } catch (e) {
-        setError(e?.message || 'Error')
+        setError(getApiErrorMessage(e, 'Failed to load hospital details. Please refresh the page.'))
       } finally {
         setLoading(false)
       }

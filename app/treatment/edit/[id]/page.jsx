@@ -6,11 +6,12 @@ import { HospitalApi } from '@/lib/api/hospitalApi'
 import { DoctorApi } from '@/lib/api/doctorApi'
 import { Layout } from '@/components/layout'
 import Swal from 'sweetalert2'
-import { Stethoscope, User, Building2, Star, Clock, DollarSign, Camera, ChevronDown, ChevronUp, Plus, Trash2, Info, Award, Microscope } from "lucide-react"
+import { Stethoscope, User, Building2, Star, Clock, DollarSign, Camera, ChevronDown, ChevronUp, Plus, Trash2, Info, Award, Microscope, Pencil, X } from "lucide-react"
 import { useRouter } from 'next/navigation'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { resolveBackendPath } from '@/lib/config'
+import { getApiErrorMessage } from '@/lib/utils'
 
 export default function EditTreatment({ params }) {
   const router = useRouter()
@@ -63,6 +64,13 @@ export default function EditTreatment({ params }) {
   const handleRemove = (item, list, setList) => {
     setList(list.filter(i => i !== item))
   }
+  const handleUpdate = (list, setList, index, newValue) => {
+    const trimmed = newValue.trim()
+    if (!trimmed) return
+    const updated = [...list]
+    updated[index] = trimmed
+    setList(updated)
+  }
 
   useEffect(() => {
     TreatmentApi.getById(id)
@@ -88,7 +96,7 @@ export default function EditTreatment({ params }) {
           isActive: data.isActive !== undefined ? data.isActive : true
         })
       })
-      .catch(err => setError(err?.message || 'Failed to load treatment'))
+      .catch(err => setError(getApiErrorMessage(err, 'Failed to load treatment details. Please refresh the page.')))
   }, [id])
 
   const submitUpdate = async () => {
@@ -128,8 +136,8 @@ export default function EditTreatment({ params }) {
       router.push('/treatment')
     } catch (e) {
       await Swal.fire({
-        title: 'Error!',
-        text: e?.response?.data?.message || 'Failed to update treatment',
+        title: 'Could not update treatment',
+        text: getApiErrorMessage(e, 'Failed to update treatment. Please review the details and try again.'),
         icon: 'error',
         confirmButtonText: 'OK'
       })
@@ -194,6 +202,7 @@ export default function EditTreatment({ params }) {
               toggleSection={toggleSection}
               handleAdd={handleAdd}
               handleRemove={handleRemove}
+              handleUpdate={handleUpdate}
               goBack={goBack}
               submitUpdate={submitUpdate}
               saving={saving}
@@ -301,14 +310,17 @@ const TreatmentDetailsEditTab = ({ formData, setFormData, hospitals, doctors, go
             </div>
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">Treatment Category *</label>
-              <input 
-                type="text" 
-                placeholder="e.g., Cardiology" 
-                value={formData.category}
+              <select
+                value={formData.category || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                 required
-              />
+              >
+                <option value="">Select category</option>
+                {['Cardiology', 'Orthopaedics', 'Neurology', 'Oncology'].map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
             </div>
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">Treatment Name *</label>
@@ -453,10 +465,25 @@ const ProfileBioEditTab = ({
   toggleSection,
   handleAdd,
   handleRemove,
+  handleUpdate,
   goBack,
   submitUpdate,
   saving
 }) => {
+  const [editingItem, setEditingItem] = useState({ field: null, index: -1 })
+  const [editValue, setEditValue] = useState('')
+  useEffect(() => {
+    if (!editingItem.field || editingItem.index < 0) {
+      setEditValue('')
+      return
+    }
+    const list = formData?.[editingItem.field]
+    if (!Array.isArray(list)) return
+    const val = list[editingItem.index]
+    setEditValue(val != null ? (typeof val === 'string' ? val : (val?.name ?? val?.value ?? String(val))) : '')
+  }, [editingItem.field, editingItem.index])
+  const [editingFaqIdx, setEditingFaqIdx] = useState(-1)
+  const [editingFaqForm, setEditingFaqForm] = useState({ question: '', answer: '' })
   const [diagnosticToolInput, setDiagnosticToolInput] = useState('')
   const [advancedOptionInput, setAdvancedOptionInput] = useState('')
   const [advantageInput, setAdvantageInput] = useState('')
@@ -514,6 +541,14 @@ const ProfileBioEditTab = ({
       ...prev,
       faq: (prev.faq || []).filter((_, idx) => idx !== index)
     }))
+  }
+  const handleUpdateFaq = (index, question, answer) => {
+    if (!question?.trim() || !answer?.trim()) return
+    setFormData(prev => {
+      const updated = [...(prev.faq || [])]
+      updated[index] = { question: question.trim(), answer: answer.trim() }
+      return { ...prev, faq: updated }
+    })
   }
 
   const openFileDialog = () => {
@@ -641,16 +676,19 @@ const ProfileBioEditTab = ({
             </div>
             <div className="flex flex-wrap gap-2">
               {formData.diagnosticTools?.map((item, idx) => (
-                <span key={idx} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full flex items-center gap-1">
-                  {item}
-                  <button 
-                    type="button" 
-                    onClick={() => handleRemove(item, formData.diagnosticTools, (newList) => setFormData(prev => ({ ...prev, diagnosticTools: newList })))} 
-                    className="ml-1 text-blue-500 hover:text-red-500"
-                  >
-                    &times;
-                  </button>
-                </span>
+                editingItem.field === 'diagnosticTools' && editingItem.index === idx ? (
+                  <div key={idx} className="w-full flex gap-2 items-center flex-wrap">
+                    <input type="text" value={editValue} onChange={(e) => setEditValue(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { handleUpdate(formData.diagnosticTools, (nl) => setFormData(prev => ({ ...prev, diagnosticTools: nl })), idx, editValue); setEditingItem({ field: null, index: -1 }); setEditValue(''); } if (e.key === 'Escape') { setEditingItem({ field: null, index: -1 }); setEditValue(''); } }} className="flex-1 min-w-0 px-3 py-2 border border-blue-300 rounded-md text-sm text-gray-900 bg-white placeholder-gray-400" autoFocus />
+                    <button type="button" onClick={() => { handleUpdate(formData.diagnosticTools, (nl) => setFormData(prev => ({ ...prev, diagnosticTools: nl })), idx, editValue); setEditingItem({ field: null, index: -1 }); setEditValue(''); }} className="px-3 py-1.5 bg-blue-600 text-white rounded-md text-sm whitespace-nowrap flex-shrink-0">Save</button>
+                    <button type="button" onClick={() => { setEditingItem({ field: null, index: -1 }); setEditValue(''); }} className="px-3 py-1.5 text-gray-600 rounded-md text-sm whitespace-nowrap flex-shrink-0 border border-gray-300 bg-white hover:bg-gray-50">Cancel</button>
+                  </div>
+                ) : (
+                  <span key={idx} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-md flex items-center gap-1 break-words max-w-full">
+                    {item}
+                    <button type="button" onClick={() => setEditingItem({ field: 'diagnosticTools', index: idx })} className="ml-1 text-blue-600 hover:text-blue-800 flex-shrink-0" title="Edit"><Pencil className="w-3.5 h-3.5" /></button>
+                    <button type="button" onClick={() => handleRemove(item, formData.diagnosticTools, (newList) => setFormData(prev => ({ ...prev, diagnosticTools: newList })))} className="text-blue-500 hover:text-red-500 flex-shrink-0">&times;</button>
+                  </span>
+                )
               ))}
             </div>
           </div>
@@ -701,16 +739,19 @@ const ProfileBioEditTab = ({
             </div>
             <div className="flex flex-wrap gap-2">
               {formData.advancedTreatmentOptions?.map((item, idx) => (
-                <span key={idx} className="bg-green-100 text-green-800 px-3 py-1 rounded-full flex items-center gap-1">
-                  {item}
-                  <button 
-                    type="button" 
-                    onClick={() => handleRemove(item, formData.advancedTreatmentOptions, (newList) => setFormData(prev => ({ ...prev, advancedTreatmentOptions: newList })))} 
-                    className="ml-1 text-green-500 hover:text-red-500"
-                  >
-                    &times;
-                  </button>
-                </span>
+                editingItem.field === 'advancedTreatmentOptions' && editingItem.index === idx ? (
+                  <div key={idx} className="w-full flex gap-2 items-center flex-wrap">
+                    <input type="text" value={editValue} onChange={(e) => setEditValue(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { handleUpdate(formData.advancedTreatmentOptions, (nl) => setFormData(prev => ({ ...prev, advancedTreatmentOptions: nl })), idx, editValue); setEditingItem({ field: null, index: -1 }); setEditValue(''); } if (e.key === 'Escape') { setEditingItem({ field: null, index: -1 }); setEditValue(''); } }} className="flex-1 min-w-0 px-3 py-2 border border-green-300 rounded-md text-sm text-gray-900 bg-white placeholder-gray-400" autoFocus />
+                    <button type="button" onClick={() => { handleUpdate(formData.advancedTreatmentOptions, (nl) => setFormData(prev => ({ ...prev, advancedTreatmentOptions: nl })), idx, editValue); setEditingItem({ field: null, index: -1 }); setEditValue(''); }} className="px-3 py-1.5 bg-green-600 text-white rounded-md text-sm whitespace-nowrap flex-shrink-0">Save</button>
+                    <button type="button" onClick={() => { setEditingItem({ field: null, index: -1 }); setEditValue(''); }} className="px-3 py-1.5 text-gray-600 rounded-md text-sm whitespace-nowrap flex-shrink-0 border border-gray-300 bg-white hover:bg-gray-50">Cancel</button>
+                  </div>
+                ) : (
+                  <span key={idx} className="bg-green-100 text-green-800 px-3 py-1 rounded-md flex items-center gap-1 break-words max-w-full">
+                    {item}
+                    <button type="button" onClick={() => setEditingItem({ field: 'advancedTreatmentOptions', index: idx })} className="ml-1 text-green-600 hover:text-green-800 flex-shrink-0" title="Edit"><Pencil className="w-3.5 h-3.5" /></button>
+                    <button type="button" onClick={() => handleRemove(item, formData.advancedTreatmentOptions, (newList) => setFormData(prev => ({ ...prev, advancedTreatmentOptions: newList })))} className="text-green-500 hover:text-red-500 flex-shrink-0 p-0.5" title="Remove"><X className="w-3.5 h-3.5" /></button>
+                  </span>
+                )
               ))}
             </div>
           </div>
@@ -761,16 +802,19 @@ const ProfileBioEditTab = ({
             </div>
             <div className="flex flex-wrap gap-2">
               {formData.advantages?.map((item, idx) => (
-                <span key={idx} className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full flex items-center gap-1">
-                  {item}
-                  <button 
-                    type="button" 
-                    onClick={() => handleRemove(item, formData.advantages, (newList) => setFormData(prev => ({ ...prev, advantages: newList })))} 
-                    className="ml-1 text-yellow-500 hover:text-red-500"
-                  >
-                    &times;
-                  </button>
-                </span>
+                editingItem.field === 'advantages' && editingItem.index === idx ? (
+                  <div key={idx} className="w-full flex gap-2 items-center flex-wrap">
+                    <input type="text" value={editValue} onChange={(e) => setEditValue(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { handleUpdate(formData.advantages, (nl) => setFormData(prev => ({ ...prev, advantages: nl })), idx, editValue); setEditingItem({ field: null, index: -1 }); setEditValue(''); } if (e.key === 'Escape') { setEditingItem({ field: null, index: -1 }); setEditValue(''); } }} className="flex-1 min-w-0 px-3 py-2 border border-yellow-300 rounded-md text-sm text-gray-900 bg-white placeholder-gray-400" autoFocus />
+                    <button type="button" onClick={() => { handleUpdate(formData.advantages, (nl) => setFormData(prev => ({ ...prev, advantages: nl })), idx, editValue); setEditingItem({ field: null, index: -1 }); setEditValue(''); }} className="px-3 py-1.5 bg-yellow-600 text-white rounded-md text-sm whitespace-nowrap flex-shrink-0">Save</button>
+                    <button type="button" onClick={() => { setEditingItem({ field: null, index: -1 }); setEditValue(''); }} className="px-3 py-1.5 text-gray-600 rounded-md text-sm whitespace-nowrap flex-shrink-0 border border-gray-300 bg-white hover:bg-gray-50">Cancel</button>
+                  </div>
+                ) : (
+                  <span key={idx} className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-md flex items-center gap-1 break-words max-w-full">
+                    {item}
+                    <button type="button" onClick={() => setEditingItem({ field: 'advantages', index: idx })} className="ml-1 text-yellow-600 hover:text-yellow-800 flex-shrink-0" title="Edit"><Pencil className="w-3.5 h-3.5" /></button>
+                    <button type="button" onClick={() => handleRemove(item, formData.advantages, (newList) => setFormData(prev => ({ ...prev, advantages: newList })))} className="text-yellow-500 hover:text-red-500 flex-shrink-0 p-0.5" title="Remove"><X className="w-3.5 h-3.5" /></button>
+                  </span>
+                )
               ))}
             </div>
           </div>
@@ -822,19 +866,29 @@ const ProfileBioEditTab = ({
             </div>
             <div className="space-y-2">
               {formData.faq?.map((faq, idx) => (
-                <div key={idx} className="bg-gray-50 p-3 rounded-md flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="font-medium text-gray-900">{faq.question}</div>
-                    <div className="text-gray-600 mt-1">{faq.answer}</div>
+                editingFaqIdx === idx ? (
+                  <div key={idx} className="bg-gray-50 p-3 rounded-md space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <input type="text" value={editingFaqForm.question} onChange={(e) => setEditingFaqForm(f => ({ ...f, question: e.target.value }))} placeholder="Question" className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 placeholder-gray-500 bg-white" />
+                      <input type="text" value={editingFaqForm.answer} onChange={(e) => setEditingFaqForm(f => ({ ...f, answer: e.target.value }))} placeholder="Answer" className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 placeholder-gray-500 bg-white" />
+                    </div>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={() => { handleUpdateFaq(idx, editingFaqForm.question, editingFaqForm.answer); setEditingFaqIdx(-1); setEditingFaqForm({ question: '', answer: '' }); }} className="px-3 py-1 bg-blue-600 text-white rounded-md text-sm">Update</button>
+                      <button type="button" onClick={() => { setEditingFaqIdx(-1); setEditingFaqForm({ question: '', answer: '' }); }} className="px-3 py-1 text-gray-600 rounded-md text-sm">Cancel</button>
+                    </div>
                   </div>
-                  <button 
-                    type="button" 
-                    onClick={() => handleRemoveFaq(idx)} 
-                    className="ml-2 text-red-500 hover:text-red-700 transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
+                ) : (
+                  <div key={idx} className="bg-gray-50 p-3 rounded-md flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900">{faq.question}</div>
+                      <div className="text-gray-600 mt-1">{faq.answer}</div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button type="button" onClick={() => { setEditingFaqIdx(idx); setEditingFaqForm({ question: faq.question, answer: faq.answer }); }} className="text-blue-600 hover:text-blue-800 p-1" title="Edit"><Pencil className="w-4 h-4" /></button>
+                      <button type="button" onClick={() => handleRemoveFaq(idx)} className="text-red-500 hover:text-red-700"><Trash2 className="w-4 h-4" /></button>
+                    </div>
+                  </div>
+                )
               ))}
             </div>
           </div>
